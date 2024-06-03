@@ -1,17 +1,14 @@
-import json
-
-from telebot import TeleBot, types
-
-env: dict = json.load(open("env.json"))
-
-bot = TeleBot(env["apiTG"])
+from config import bot
+from telebot import types
+from telebot.types import Message, CallbackQuery
 
 MESSAGE_REPLY_START = "Начать"
 CALLBACK_DATA_HANDLER_MESSAGE = "yes"
 
 
 @bot.message_handler(commands=['start'])
-def startBot(message):
+def startBot(message: Message):
+    print(type(message))
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton(MESSAGE_REPLY_START)
     btn2 = types.KeyboardButton("Задать вопрос")
@@ -23,19 +20,19 @@ def startBot(message):
 
 
 # Ветка диалога
-def getName(message):
+def getName(message: Message):
     print(message.text)
     bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
     bot.register_next_step_handler(message, getSurname)
 
 
-def getSurname(message):
+def getSurname(message: Message):
     print(message.text)
     bot.send_message(message.from_user.id, 'Сколько тебе лет?')
 
 
 @bot.message_handler(content_types=['text'])
-def getText(message):
+def getText(message: Message):
     if message.text and message.text == MESSAGE_REPLY_START:
         first_mess = (f"<b>{message.from_user.first_name} {message.from_user.last_name}</b>, привет, я бот для "
                       f"прогнозирования закупок")
@@ -45,7 +42,8 @@ def getText(message):
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def response(function_call):
+def response(function_call: CallbackQuery):
+    print(type(function_call))
     if function_call.message and function_call.data == CALLBACK_DATA_HANDLER_MESSAGE:
         second_mess = "test"
         markup = types.InlineKeyboardMarkup()
