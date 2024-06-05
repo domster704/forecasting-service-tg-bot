@@ -1,9 +1,8 @@
 from config import bot
 from telebot import types
 from telebot.types import Message, CallbackQuery
-
-MESSAGE_REPLY_START = "Начать"
-CALLBACK_DATA_HANDLER_MESSAGE = "yes"
+from branches.user_info import getName
+from res.text import *
 
 
 @bot.message_handler(commands=['start'])
@@ -11,31 +10,18 @@ def startBot(message: Message):
     print(type(message))
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton(MESSAGE_REPLY_START)
-    btn2 = types.KeyboardButton("Задать вопрос")
+    btn2 = types.KeyboardButton(ASK_QUESTION_MESSAGE)
     btn3 = types.KeyboardButton("Test")
     markup.add(btn1).row(btn2, btn3)
 
-    bot.send_message(message.chat.id, 'Я ассистент по закупкам', parse_mode='html', reply_markup=markup)
+    bot.send_message(message.chat.id, BOT_HELLO_MESSAGE, parse_mode='html', reply_markup=markup)
     bot.register_next_step_handler(message, getName)  # следующий шаг – функция get_name
-
-
-# Ветка диалога
-def getName(message: Message):
-    print(message.text)
-    bot.send_message(message.from_user.id, 'Какая у тебя фамилия?')
-    bot.register_next_step_handler(message, getSurname)
-
-
-def getSurname(message: Message):
-    print(message.text)
-    bot.send_message(message.from_user.id, 'Сколько тебе лет?')
 
 
 @bot.message_handler(content_types=['text'])
 def getText(message: Message):
     if message.text and message.text == MESSAGE_REPLY_START:
-        first_mess = (f"<b>{message.from_user.first_name} {message.from_user.last_name}</b>, привет, я бот для "
-                      f"прогнозирования закупок")
+        first_mess = FIRST_MESSAGE(message)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton(text='Да', callback_data=CALLBACK_DATA_HANDLER_MESSAGE))
         bot.send_message(message.chat.id, first_mess, parse_mode='html', reply_markup=markup)
