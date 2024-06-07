@@ -1,0 +1,1 @@
+MESSAGE_REPLY_START = "Начать"
