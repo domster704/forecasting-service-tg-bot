@@ -7,13 +7,14 @@ from steps.info import InfoStep
 from viewModel import vm
 
 
+# TODO: сделать абстрактный класс для классов AuthorizationStep и InfoStep
 class AuthorizationStep(object):
     def __init__(self):
         self.authDataChecker: AuthorizationDataChecker = AuthorizationDataChecker()
         self.rights = []
 
     def init(self, message: Message):
-        bot.send_message(message.chat.id, REQUIRE_AUTHORIZED)
+        bot.send_message(message.chat.id, REQUIRE_AUTHORIZED, reply_markup=types.ReplyKeyboardRemove())
         self.getLogin(message)
 
     def getLogin(self, message: Message):
@@ -66,6 +67,9 @@ class AuthorizationDataChecker(object):
 
     def checkData(self) -> None:
         self.isAuth = self.__checkLogin() and self.__checkPassword()
+
+    def __str__(self) -> str:
+        return f"Login: {self.__login}, Password: {self.__password}"
 
 
 @bot.callback_query_handler(func=lambda call: call.data == TRY_AGAIN_ACTION)

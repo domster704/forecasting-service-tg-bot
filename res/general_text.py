@@ -1,1 +1,3 @@
+START_COMMAND = 'start'
+
 MESSAGE_REPLY_START = "Начать"
