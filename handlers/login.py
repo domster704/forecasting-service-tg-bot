@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from config import session, setAppState
+from config import session
 from db.db import User
 from res.general_text import SOMETHING_WRONG
 from res.login_text import *
@@ -14,11 +14,8 @@ from state.general_state import AppState
 loginRouter = Router()
 
 
-# @loginRouter.message(AppState.login, F.text == MESSAGE_REPLY_START)
 @loginRouter.message(AppState.login)
-async def loginHandlerInit(message: types.Message, state: FSMContext):
-    await setAppState(state, AppState.login)
-
+async def loginHandlerInit(message: types.Message, state: FSMContext) -> None:
     user_login_info: User = await session.get(User, message.from_user.id)
     if user_login_info is not None and user_login_info.isAuth:
         await goToInfoHandler(message, state)
@@ -30,22 +27,23 @@ async def loginHandlerInit(message: types.Message, state: FSMContext):
 
 
 @loginRouter.callback_query(StateFilter(None), F.data == TRY_AGAIN_ACTION)
-async def loginHandlerCallbackInit(callback: types.CallbackQuery, state: FSMContext):
+async def loginHandlerCallbackInit(callback: types.CallbackQuery, state: FSMContext) -> None:
     await callback.message.answer(ENTER_LOGIN)
     await state.set_state(AuthState.login)
 
 
 @loginRouter.message(AuthState.login)
-async def getLogin(message: types.Message, state: FSMContext):
+async def getLogin(message: types.Message, state: FSMContext) -> None:
     await state.update_data(login=message.text.lower())
     await message.answer(ENTER_PASSWORD)
     await state.set_state(AuthState.password)
 
 
 @loginRouter.message(AuthState.password)
-async def getPassword(message: types.Message, state: FSMContext):
+async def getPassword(message: types.Message, state: FSMContext) -> None:
     await state.update_data(password=message.text.lower())
     auth: AuthorizationCredentialsChecker = AuthorizationCredentialsChecker(**await state.get_data())
+
     try:
         await state.clear()
 
@@ -71,8 +69,7 @@ async def getPassword(message: types.Message, state: FSMContext):
         await message.answer(SOMETHING_WRONG)
 
 
-@loginRouter.message(AppState.login)
-async def goToInfoHandler(message: types.Message, state: FSMContext):
+async def goToInfoHandler(message: types.Message, state: FSMContext) -> None:
     await state.set_state(AppState.info)
     keyboard = ReplyKeyboardBuilder().add(
         KeyboardButton(text=TRANSITION_BUTTON_TEXT)
@@ -84,7 +81,7 @@ async def goToInfoHandler(message: types.Message, state: FSMContext):
 
 
 class AuthorizationCredentialsChecker(object):
-    def __init__(self, login: str, password: str):
+    def __init__(self, login: str, password: str, **kwargs):
         self.__login: str = login
         self.__password: str = password
         self.isAuth: bool = self.__checkData()
