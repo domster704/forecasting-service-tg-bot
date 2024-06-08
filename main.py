@@ -14,7 +14,6 @@ from state.general_state import AppState
 
 @dp.message(StateFilter(None), Command(START_COMMAND))
 async def startBot(message: Message, state: FSMContext) -> None:
-
     markup = [
         [KeyboardButton(text=MESSAGE_REPLY_START)]
     ]

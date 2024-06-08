@@ -5,5 +5,4 @@ class AppState(StatesGroup):
     start = State()
     login = State()
     info = State()
-    userInfo = State()
     createPurchase = State()
