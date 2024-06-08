@@ -1,27 +1,27 @@
-from typing import Callable, Dict, Any, Awaitable
-
-from aiogram import types, Router, F, BaseMiddleware
+from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import TelegramObject, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from sqlalchemy.orm import Session
+from aiogram.types import InlineKeyboardButton, KeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from config import session
+from config import session, setAppState
 from db.db import User
-from handlers.info import infoHandlerInit
-from res.general_text import MESSAGE_REPLY_START, SOMETHING_WRONG
+from res.general_text import SOMETHING_WRONG
 from res.login_text import *
 from state.auth_state import AuthState
+from state.general_state import AppState
 
 loginRouter = Router()
 
 
-@loginRouter.message(StateFilter(None), F.text == MESSAGE_REPLY_START)
+# @loginRouter.message(AppState.login, F.text == MESSAGE_REPLY_START)
+@loginRouter.message(AppState.login)
 async def loginHandlerInit(message: types.Message, state: FSMContext):
+    await setAppState(state, AppState.login)
+
     user_login_info: User = await session.get(User, message.from_user.id)
     if user_login_info is not None and user_login_info.isAuth:
-        await goToInfoHandler(message)
+        await goToInfoHandler(message, state)
         return
 
     await message.answer(REQUIRE_AUTHORIZED)
@@ -45,7 +45,7 @@ async def getLogin(message: types.Message, state: FSMContext):
 @loginRouter.message(AuthState.password)
 async def getPassword(message: types.Message, state: FSMContext):
     await state.update_data(password=message.text.lower())
-    auth: AuthorizationDataChecker = AuthorizationDataChecker(**await state.get_data())
+    auth: AuthorizationCredentialsChecker = AuthorizationCredentialsChecker(**await state.get_data())
     try:
         await state.clear()
 
@@ -54,7 +54,7 @@ async def getPassword(message: types.Message, state: FSMContext):
             await session.commit()
 
             await message.answer(RIGHT_LOGIN_AND_PASSWORD)
-            await goToInfoHandler(message)
+            await goToInfoHandler(message, state)
             return
 
         raise PermissionError(WRONG_LOGIN_OR_PASSWORD)
@@ -71,12 +71,19 @@ async def getPassword(message: types.Message, state: FSMContext):
         await message.answer(SOMETHING_WRONG)
 
 
-async def goToInfoHandler(message: types.Message):
-    print("auth")
-    await infoHandlerInit(message)
+@loginRouter.message(AppState.login)
+async def goToInfoHandler(message: types.Message, state: FSMContext):
+    await state.set_state(AppState.info)
+    keyboard = ReplyKeyboardBuilder().add(
+        KeyboardButton(text=TRANSITION_BUTTON_TEXT)
+    )
+
+    await message.answer(PRESS_CONTINUE_MESSAGE,
+                         reply_markup=keyboard.as_markup(one_time_keyboard=True,
+                                                         resize_keyboard=True))
 
 
-class AuthorizationDataChecker(object):
+class AuthorizationCredentialsChecker(object):
     def __init__(self, login: str, password: str):
         self.__login: str = login
         self.__password: str = password
@@ -90,27 +97,3 @@ class AuthorizationDataChecker(object):
 
     def __checkData(self) -> bool:
         return self.__checkLogin() and self.__checkPassword()
-
-    def __str__(self) -> str:
-        return f"Login: {self.__login}, Password: {self.__password}"
-
-
-class CheckAuthorizationMiddleware(BaseMiddleware):
-    def __init__(self, session: Session):
-        self.session: Session = session
-
-    async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any],
-    ) -> Any:
-        try:
-            if await self.session.get(User, event.chat.id) is None:
-                await event.answer(PERMISSION_ERROR_TEXT)
-                return
-
-            return await handler(event, data)
-        except Exception as e:
-            print(e)
-            await event.answer(PERMISSION_ERROR_TEXT)

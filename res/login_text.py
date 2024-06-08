@@ -11,3 +11,6 @@ PERMISSION_ERROR_TEXT = "Вы не авторизованы"
 REQUIRE_AUTHORIZED = "Для продолжения необходимо авторизоваться"
 ENTER_LOGIN = "Введите логин"
 ENTER_PASSWORD = "Введите пароль"
+
+TRANSITION_BUTTON_TEXT = "Информация"
+PRESS_CONTINUE_MESSAGE = f"Нажмите <b>{TRANSITION_BUTTON_TEXT}</b> для продолжения"
