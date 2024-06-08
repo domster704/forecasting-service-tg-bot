@@ -1,22 +1,24 @@
+from aiogram.filters import Command
 from telebot import types
 from telebot.types import Message
 
-from config import bot
-from res.general_text import MESSAGE_REPLY_START, START_COMMAND
+from config import bot, dp
+from res.general_text import *
 from res.login_text import *
+from state.auth_state import AuthState
 from steps.login import AuthorizationStep
-from viewModel import vm
 
 
-@bot.message_handler(commands=[f'{START_COMMAND}'])
+@dp.message(Command(START_COMMAND))
 def startBot(message: Message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     start_button = types.KeyboardButton(MESSAGE_REPLY_START)
     markup.add(start_button)
 
+    bot.set_state(message.from_user.id, AuthState.auth, message.chat.id)
     bot.send_message(message.chat.id, BOT_HELLO_MESSAGE, parse_mode='html', reply_markup=markup)
-    vm.auth = AuthorizationStep()
-    bot.register_next_step_handler(message, vm.auth.init)
+    auth = AuthorizationStep()
+    bot.register_next_step_handler(message, auth.init)
 
 
 @bot.message_handler(content_types=['text'])

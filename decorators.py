@@ -2,7 +2,6 @@ from functools import wraps
 from typing import Callable
 
 from res.info_text import PERMISSION_ERROR_TEXT
-from viewModel import vm
 from config import bot
 
 

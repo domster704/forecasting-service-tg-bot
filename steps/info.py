@@ -3,7 +3,7 @@ from telebot.types import Message
 
 from config import bot
 from decorators import isAuth
-from res.general_text import MESSAGE_REPLY_START
+from res.general_text import *
 from res.info_text import *
 from res.login_text import TRY_AUTH_MESSAGE
 
@@ -29,10 +29,25 @@ class InfoStep(object):
 def get_help(message, error):
     if type(error) is PermissionError:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        retry_button = types.KeyboardButton(text=f"{TRY_AUTH_MESSAGE}")
+        retry_button = types.KeyboardButton(text=TRY_AUTH_MESSAGE)
         markup.add(retry_button)
 
         bot.send_message(message.chat.id, PERMISSION_ERROR_TEXT, parse_mode='html', reply_markup=markup)
         return
 
-    print(123)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    retry_button = types.KeyboardButton(text=BACK_BUTTON_TEXT)
+    markup.add(retry_button)
+    bot.send_message(message.chat.id, PERMISSION_ERROR_TEXT, parse_mode='html', reply_markup=markup)
+
+
+@bot.message_handler(func=lambda message: message.text == BACK_BUTTON_TEXT)
+@isAuth
+def get_help(message, error):
+    if type(error) is PermissionError:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        retry_button = types.KeyboardButton(text=TRY_AUTH_MESSAGE)
+        markup.add(retry_button)
+
+        bot.send_message(message.chat.id, PERMISSION_ERROR_TEXT, parse_mode='html', reply_markup=markup)
+        return

@@ -1,63 +1,56 @@
-from telebot import types
-from telebot.types import Message
+from typing import Callable, Dict, Any, Awaitable
 
-from config import bot
+from aiogram import types, Router, F, BaseMiddleware
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.types import TelegramObject
+from sqlalchemy.orm import Session
+
+from config import session
+from db.db import User
+from res.general_text import MESSAGE_REPLY_START, SOMETHING_WRONG
 from res.login_text import *
-from steps.info import InfoStep
-from viewModel import vm
+from state.auth_state import AuthState
+
+loginRouter = Router()
 
 
-# TODO: сделать абстрактный класс для классов AuthorizationStep и InfoStep
-class AuthorizationStep(object):
-    def __init__(self):
-        self.authDataChecker: AuthorizationDataChecker = AuthorizationDataChecker()
-        self.rights = []
+@loginRouter.message(StateFilter(None), F.text == MESSAGE_REPLY_START)
+async def init(message: types.Message, state: FSMContext):
+    await message.answer(REQUIRE_AUTHORIZED)
+    await message.answer(ENTER_LOGIN)
+    await state.set_state(AuthState.login)
 
-    def init(self, message: Message):
-        bot.send_message(message.chat.id, REQUIRE_AUTHORIZED, reply_markup=types.ReplyKeyboardRemove())
-        self.getLogin(message)
 
-    def getLogin(self, message: Message):
-        bot.send_message(message.chat.id, ENTER_LOGIN)
-        bot.register_next_step_handler(message, self.getPassword)
+@loginRouter.message(AuthState.login)
+async def getLogin(message: types.Message, state: FSMContext):
+    await state.update_data(login=message.text.lower())
+    await message.answer(ENTER_PASSWORD)
+    await state.set_state(AuthState.password)
 
-    def getPassword(self, message: Message):
-        # Получаем логин из предыдущего сообщения
-        self.authDataChecker.setLogin(message.text)
 
-        bot.send_message(message.chat.id, ENTER_PASSWORD)
-        bot.register_next_step_handler(message, self.checkLoginAndPassword)
+@loginRouter.message(AuthState.password)
+async def getPassword(message: types.Message, state: FSMContext):
+    await state.update_data(password=message.text.lower())
+    auth: AuthorizationDataChecker = AuthorizationDataChecker(**await state.get_data())
+    try:
+        await state.set_state({})
+        await session.add(User(id=message.from_user.id, isAuth=auth.isAuth))
 
-    def checkLoginAndPassword(self, message: Message):
-        # Получаем пароль из предыдущего сообщения
-        self.authDataChecker.setPassword(message.text)
-
-        self.authDataChecker.checkData()
-        if not self.authDataChecker.isAuth:
-            markup = types.InlineKeyboardMarkup()
-            retry_button = types.InlineKeyboardButton(text=TRY_AGAIN_ACTION, callback_data=TRY_AGAIN_ACTION)
-            markup.add(retry_button)
-
-            bot.send_message(message.chat.id, WRONG_LOGIN_OR_PASSWORD, parse_mode='html', reply_markup=markup)
+        if auth.isAuth:
+            await message.answer(RIGHT_LOGIN_AND_PASSWORD)
             return
 
-        bot.send_message(message.chat.id, RIGHT_LOGIN_AND_PASSWORD)
-        vm.infoStep = InfoStep()
-
-        vm.infoStep.init(message)
+        await message.answer(WRONG_LOGIN_OR_PASSWORD)
+    except Exception as e:
+        await message.answer(SOMETHING_WRONG)
 
 
 class AuthorizationDataChecker(object):
-    def __init__(self):
-        self.__login: str = ""
-        self.__password: str = ""
-        self.isAuth: bool = False
-
-    def setLogin(self, login: str) -> None:
-        self.__login = login
-
-    def setPassword(self, password: str) -> None:
-        self.__password = password
+    def __init__(self, login: str, password: str):
+        self.__login: str = login
+        self.__password: str = password
+        self.isAuth: bool = self.__checkData()
 
     def __checkLogin(self) -> bool:
         return self.__login == "test123"
@@ -65,18 +58,38 @@ class AuthorizationDataChecker(object):
     def __checkPassword(self) -> bool:
         return self.__password == "test123"
 
-    def checkData(self) -> None:
-        self.isAuth = self.__checkLogin() and self.__checkPassword()
+    def __checkData(self) -> bool:
+        return self.__checkLogin() and self.__checkPassword()
 
     def __str__(self) -> str:
         return f"Login: {self.__login}, Password: {self.__password}"
 
 
-@bot.callback_query_handler(func=lambda call: call.data == TRY_AGAIN_ACTION)
-def retry_login(call: types.CallbackQuery):
-    if not hasattr(vm, 'auth'):
-        return
+# @bot.callback_query_handler(func=lambda call: call.data == TRY_AGAIN_ACTION)
+# def retry_login(call: types.CallbackQuery):
+#     if not hasattr(vm, 'auth'):
+#         return
+#
+#     message = bot.send_message(call.message.chat.id, TRY_AGAIN_MESSAGE)
+#     vm.auth.getLogin(message)
+#     bot.answer_callback_query(call.id)
 
-    message = bot.send_message(call.message.chat.id, TRY_AGAIN_MESSAGE)
-    vm.auth.getLogin(message)
-    bot.answer_callback_query(call.id)
+class CheckAuthorizationMiddleware(BaseMiddleware):
+    def __init__(self, session: Session):
+        self.session: Session = session
+
+    async def __call__(
+            self,
+            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+            event: TelegramObject,
+            data: Dict[str, Any],
+    ) -> Any:
+        try:
+            if await self.session.get(User, event.chat.id) is None:
+                await event.answer(PERMISSION_ERROR_TEXT)
+                return
+
+            return await handler(event, data)
+        except Exception as e:
+            print(e)
+            await event.answer(PERMISSION_ERROR_TEXT)

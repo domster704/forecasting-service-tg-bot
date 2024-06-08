@@ -4,4 +4,4 @@ class ViewModel(object):
         self.infoStep = None
 
 
-vm: ViewModel = ViewModel()
+users: dict = {}
