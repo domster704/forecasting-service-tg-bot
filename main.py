@@ -1,43 +1,28 @@
-from aiogram.filters import Command
-from telebot import types
-from telebot.types import Message
+import asyncio
 
-from config import bot, dp
+from aiogram.filters import Command
+from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
+
+from config import dp, bot, session
 from res.general_text import *
-from res.login_text import *
-from state.auth_state import AuthState
-from steps.login import AuthorizationStep
+from handlers.info import infoRouter
+from handlers.login import loginRouter, CheckAuthorizationMiddleware
 
 
 @dp.message(Command(START_COMMAND))
-def startBot(message: Message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    start_button = types.KeyboardButton(MESSAGE_REPLY_START)
-    markup.add(start_button)
+async def startBot(message: Message):
+    markup = [
+        [KeyboardButton(text=MESSAGE_REPLY_START)]
+    ]
+    keyboard = ReplyKeyboardMarkup(keyboard=markup,
+                                   resize_keyboard=True,
+                                   input_field_placeholder=START_COMMAND,
+                                   one_time_keyboard=True)
 
-    bot.set_state(message.from_user.id, AuthState.auth, message.chat.id)
-    bot.send_message(message.chat.id, BOT_HELLO_MESSAGE, parse_mode='html', reply_markup=markup)
-    auth = AuthorizationStep()
-    bot.register_next_step_handler(message, auth.init)
-
-
-@bot.message_handler(content_types=['text'])
-def getText(message: Message):
-    if message.text and message.text == TRY_AUTH_MESSAGE:
-        vm.auth = AuthorizationStep()
-        vm.auth.init(message)
+    await message.answer(BOT_HELLO_MESSAGE, reply_markup=keyboard)
 
 
-#
-#
-# @bot.callback_query_handler(func=lambda call: True)
-# def response(function_call: CallbackQuery):
-#     if function_call.message and function_call.data == CALLBACK_DATA_HANDLER_MESSAGE:
-#         second_mess = "test"
-#         markup = types.InlineKeyboardMarkup()
-#         markup.add(types.InlineKeyboardButton("Перейти на сайт", url="https://google.com"))
-#         bot.send_message(function_call.message.chat.id, second_mess, reply_markup=markup)
-#         bot.answer_callback_query(function_call.id)
-
-
-bot.infinity_polling()
+if __name__ == "__main__":
+    infoRouter.message.middleware(CheckAuthorizationMiddleware(session=session))
+    dp.include_routers(loginRouter, infoRouter)
+    asyncio.run(dp.start_polling(bot))

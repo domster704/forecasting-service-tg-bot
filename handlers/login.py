@@ -3,11 +3,13 @@ from typing import Callable, Dict, Any, Awaitable
 from aiogram import types, Router, F, BaseMiddleware
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import TelegramObject
+from aiogram.types import TelegramObject, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.orm import Session
 
 from config import session
 from db.db import User
+from handlers.info import infoHandlerInit
 from res.general_text import MESSAGE_REPLY_START, SOMETHING_WRONG
 from res.login_text import *
 from state.auth_state import AuthState
@@ -16,9 +18,20 @@ loginRouter = Router()
 
 
 @loginRouter.message(StateFilter(None), F.text == MESSAGE_REPLY_START)
-async def init(message: types.Message, state: FSMContext):
+async def loginHandlerInit(message: types.Message, state: FSMContext):
+    user_login_info: User = await session.get(User, message.from_user.id)
+    if user_login_info is not None and user_login_info.isAuth:
+        await goToInfoHandler(message)
+        return
+
     await message.answer(REQUIRE_AUTHORIZED)
     await message.answer(ENTER_LOGIN)
+    await state.set_state(AuthState.login)
+
+
+@loginRouter.callback_query(StateFilter(None), F.data == TRY_AGAIN_ACTION)
+async def loginHandlerCallbackInit(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.answer(ENTER_LOGIN)
     await state.set_state(AuthState.login)
 
 
@@ -34,16 +47,33 @@ async def getPassword(message: types.Message, state: FSMContext):
     await state.update_data(password=message.text.lower())
     auth: AuthorizationDataChecker = AuthorizationDataChecker(**await state.get_data())
     try:
-        await state.set_state({})
-        await session.add(User(id=message.from_user.id, isAuth=auth.isAuth))
+        await state.clear()
 
         if auth.isAuth:
+            session.add(User(id=message.from_user.id, isAuth=auth.isAuth))
+            await session.commit()
+
             await message.answer(RIGHT_LOGIN_AND_PASSWORD)
+            await goToInfoHandler(message)
             return
 
-        await message.answer(WRONG_LOGIN_OR_PASSWORD)
+        raise PermissionError(WRONG_LOGIN_OR_PASSWORD)
+    except PermissionError as pe:
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(
+            text=TRY_AGAIN_ACTION,
+            callback_data=TRY_AGAIN_ACTION
+        ))
+
+        await message.answer(pe.__str__(), reply_markup=builder.as_markup())
     except Exception as e:
+        print(e)
         await message.answer(SOMETHING_WRONG)
+
+
+async def goToInfoHandler(message: types.Message):
+    print("auth")
+    await infoHandlerInit(message)
 
 
 class AuthorizationDataChecker(object):
@@ -64,15 +94,6 @@ class AuthorizationDataChecker(object):
     def __str__(self) -> str:
         return f"Login: {self.__login}, Password: {self.__password}"
 
-
-# @bot.callback_query_handler(func=lambda call: call.data == TRY_AGAIN_ACTION)
-# def retry_login(call: types.CallbackQuery):
-#     if not hasattr(vm, 'auth'):
-#         return
-#
-#     message = bot.send_message(call.message.chat.id, TRY_AGAIN_MESSAGE)
-#     vm.auth.getLogin(message)
-#     bot.answer_callback_query(call.id)
 
 class CheckAuthorizationMiddleware(BaseMiddleware):
     def __init__(self, session: Session):
