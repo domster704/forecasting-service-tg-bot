@@ -1,5 +1,4 @@
 from aiogram import Router, F
-from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardRemove
@@ -64,15 +63,16 @@ async def assertError(message: Message, state: FSMContext) -> None:
 @infoRouter.message(InfoState.assertError)
 async def sendAssertedError(message: Message, state: FSMContext) -> None:
     print(message.text)
+    await state.set_state(InfoState.userInfo)
     await message.reply(text=ASSERT_MESSAGE_SUCCESS)
 
 
 @infoRouter.message(default_state, F.text == EXIT_BUTTON_TEXT)
-@infoRouter.message(InfoState.waitPressButtons, F.text == EXIT_BUTTON_TEXT)
+@infoRouter.message(InfoState.userInfo, F.text == EXIT_BUTTON_TEXT)
 async def exitFromAccount(message: Message, state: FSMContext) -> None:
-    await state.set_state(AppState.start)
     isSuccessLogout: bool = await logout(message.chat.id)
     if isSuccessLogout:
         await message.answer(text=EXIT_SUCCESS_TEXT, reply_markup=ReplyKeyboardRemove())
+        await state.clear()
     else:
         await message.answer(text=SOMETHING_WRONG)

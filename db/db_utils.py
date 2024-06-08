@@ -4,7 +4,7 @@ from db.db import User
 
 async def logout(chat_id: int) -> bool:
     try:
-        await session.delete(session.get(User, chat_id))
+        await session.delete(await session.get(User, chat_id))
         await session.commit()
         return True
     except Exception as e:
