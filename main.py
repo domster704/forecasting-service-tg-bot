@@ -1,41 +1,49 @@
-from telebot import types
-from telebot.types import Message
+import asyncio
 
-from config import bot
-from res.general_text import MESSAGE_REPLY_START, START_COMMAND
-from res.login_text import *
-from steps.login import AuthorizationStep
-from viewModel import vm
+from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, ReplyKeyboardRemove
 
-
-@bot.message_handler(commands=[f'{START_COMMAND}'])
-def startBot(message: Message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    start_button = types.KeyboardButton(MESSAGE_REPLY_START)
-    markup.add(start_button)
-
-    bot.send_message(message.chat.id, BOT_HELLO_MESSAGE, parse_mode='html', reply_markup=markup)
-    vm.auth = AuthorizationStep()
-    bot.register_next_step_handler(message, vm.auth.init)
+from config import dp, bot, session, stateStorage
+from handlers.actions_list_handler import actionListRouter
+from handlers.back_handler import backRouter
+from handlers.common_purchases_analysis import commonPurchasesAnalysisRouter
+from handlers.info import infoRouter
+from handlers.login import loginRouter, loginHandlerInit
+from middleware.auth_middleware import AuthorizationCheckMiddleware
+from res.general_text import *
+from state.general_state import AppState
 
 
-@bot.message_handler(content_types=['text'])
-def getText(message: Message):
-    if message.text and message.text == TRY_AUTH_MESSAGE:
-        vm.auth = AuthorizationStep()
-        vm.auth.init(message)
+@dp.message(Command(START_COMMAND))
+async def startBot(message: Message, state: FSMContext) -> None:
+    """
+    Стартовая функция для запуска бота. Сразу переводит на шаг "Авторизация".
+    :param message:
+    :param state:
+    :return: None
+    """
+    await message.answer(BOT_HELLO_MESSAGE, reply_markup=ReplyKeyboardRemove())
+    await state.set_state(AppState.login)
+    await loginHandlerInit(message=message, state=state)
 
 
-#
-#
-# @bot.callback_query_handler(func=lambda call: True)
-# def response(function_call: CallbackQuery):
-#     if function_call.message and function_call.data == CALLBACK_DATA_HANDLER_MESSAGE:
-#         second_mess = "test"
-#         markup = types.InlineKeyboardMarkup()
-#         markup.add(types.InlineKeyboardButton("Перейти на сайт", url="https://google.com"))
-#         bot.send_message(function_call.message.chat.id, second_mess, reply_markup=markup)
-#         bot.answer_callback_query(function_call.id)
+if __name__ == "__main__":
+    routerListForAuthRequired = [
+        infoRouter,
+        actionListRouter,
+        commonPurchasesAnalysisRouter,
+        backRouter,
+    ]
+    for router in routerListForAuthRequired:
+        # Устанавливаем middleware для проверки авторизации к роутерам
+        router.message.middleware(AuthorizationCheckMiddleware(
+            session=session,
+            storage=stateStorage
+        ))
 
-
-bot.infinity_polling()
+    dp.include_routers(
+        loginRouter,
+        *routerListForAuthRequired
+    )
+    asyncio.run(dp.start_polling(bot))
