@@ -1,11 +1,12 @@
 from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, KeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import session
 from db.db import User
+from handlers.info import infoHandlerInit
 from res.general_text import SOMETHING_WRONG
 from res.login_text import *
 from state.auth_state import AuthState
@@ -71,13 +72,7 @@ async def getPassword(message: types.Message, state: FSMContext) -> None:
 
 async def goToInfoHandler(message: types.Message, state: FSMContext) -> None:
     await state.set_state(AppState.info)
-    keyboard = ReplyKeyboardBuilder().add(
-        KeyboardButton(text=TRANSITION_BUTTON_TEXT)
-    )
-
-    await message.answer(PRESS_CONTINUE_MESSAGE,
-                         reply_markup=keyboard.as_markup(one_time_keyboard=True,
-                                                         resize_keyboard=True))
+    await infoHandlerInit(message, state)
 
 
 class AuthorizationCredentialsChecker(object):

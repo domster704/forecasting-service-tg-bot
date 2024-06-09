@@ -5,6 +5,7 @@ from aiogram.types import KeyboardButton, Message, ReplyKeyboardRemove
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from db.db_utils import logout
+from handlers.actions_list_handler import actionListHandlerInit
 from res.general_text import SOMETHING_WRONG
 from res.info_text import *
 from res.login_text import TRANSITION_BUTTON_TEXT
@@ -47,13 +48,6 @@ async def getUserInfo(message: Message, state: FSMContext) -> None:
     await message.answer(text=USER_INFO_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
-@infoRouter.message(default_state, F.text == BACK_BUTTON_TEXT)
-@infoRouter.message(InfoState.userInfo, F.text == BACK_BUTTON_TEXT)
-async def backAction(message: Message, state: FSMContext) -> None:
-    await state.set_state(AppState.info)
-    await infoHandlerInit(message, state)
-
-
 @infoRouter.message(InfoState.userInfo, F.text == ASSERT_BUTTON_TEXT)
 async def assertError(message: Message, state: FSMContext) -> None:
     await state.set_state(InfoState.assertError)
@@ -76,3 +70,10 @@ async def exitFromAccount(message: Message, state: FSMContext) -> None:
         await state.clear()
     else:
         await message.answer(text=SOMETHING_WRONG)
+
+
+@infoRouter.message(default_state, F.text == CONTINUE_BUTTON_TEXT)
+@infoRouter.message(InfoState.waitPressButtons, F.text == CONTINUE_BUTTON_TEXT)
+async def continueAction(message: Message, state: FSMContext) -> None:
+    await state.set_state(AppState.actionList)
+    await actionListHandlerInit(message, state)

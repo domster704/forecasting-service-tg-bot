@@ -7,7 +7,7 @@ DO_AUTHORIZATION = 'Авторизоваться'
 TRY_AGAIN_MESSAGE = 'Попробуйте снова'
 TRY_AUTH_MESSAGE = 'Попробуйте авторизоваться'
 
-PERMISSION_ERROR_TEXT = "Вы не авторизованы"
+PERMISSION_AUTH_ERROR_TEXT = "Вы не авторизованы"
 
 REQUIRE_AUTHORIZED = "Для продолжения необходимо авторизоваться"
 ENTER_LOGIN = "Введите логин"

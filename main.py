@@ -1,35 +1,41 @@
 import asyncio
 
-from aiogram.filters import Command, StateFilter
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.fsm.state import default_state
+from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from config import dp, bot, session, stateStorage
+from handlers.actions_list_handler import actionListHandler
+from handlers.back_handler import backRouter
 from handlers.info import infoRouter
-from handlers.login import loginRouter
+from handlers.login import loginRouter, loginHandlerInit
 from middleware.auth_middleware import AuthorizationCheckMiddleware
 from res.general_text import *
 from state.general_state import AppState
 
 
-@dp.message(StateFilter(None), Command(START_COMMAND))
+@dp.message(Command(START_COMMAND))
 async def startBot(message: Message, state: FSMContext) -> None:
-    markup = [
-        [KeyboardButton(text=MESSAGE_REPLY_START)]
-    ]
-    keyboard = ReplyKeyboardMarkup(keyboard=markup,
-                                   resize_keyboard=True,
-                                   input_field_placeholder=START_COMMAND,
-                                   one_time_keyboard=True)
-
-    await message.answer(BOT_HELLO_MESSAGE, reply_markup=keyboard)
+    await message.answer(BOT_HELLO_MESSAGE, reply_markup=ReplyKeyboardRemove())
     await state.set_state(AppState.login)
+    await loginHandlerInit(message=message, state=state)
 
 
 if __name__ == "__main__":
-    infoRouter.message.middleware(AuthorizationCheckMiddleware(
-        session=session,
-        storage=stateStorage
-    ))
-    dp.include_routers(loginRouter, infoRouter)
+    routerListForAuthRequired = [
+        infoRouter,
+        actionListHandler,
+        backRouter
+    ]
+    for router in routerListForAuthRequired:
+        router.message.middleware(AuthorizationCheckMiddleware(
+            session=session,
+            storage=stateStorage
+        ))
+
+    dp.include_routers(
+        loginRouter,
+        *routerListForAuthRequired
+    )
     asyncio.run(dp.start_polling(bot))
