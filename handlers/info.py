@@ -17,7 +17,7 @@ infoRouter = Router()
 
 @infoRouter.message(AppState.info, F.text == TRANSITION_BUTTON_TEXT)
 async def infoHandlerInit(message: Message, state: FSMContext) -> None:
-    await state.set_state(InfoState.waitPressButtons)
+    await state.set_state(AppState.info, )
 
     keyboard = ReplyKeyboardBuilder().add(
         KeyboardButton(text=CONTINUE_BUTTON_TEXT)
@@ -28,15 +28,15 @@ async def infoHandlerInit(message: Message, state: FSMContext) -> None:
     await message.answer(text=INFO_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
-@infoRouter.message(InfoState.waitPressButtons, F.text == HELP_BUTTON_TEXT)
 @infoRouter.message(default_state, F.text == HELP_BUTTON_TEXT)
+@infoRouter.message(AppState.info, F.text == HELP_BUTTON_TEXT)
 async def getHelp(message: Message, state: FSMContext) -> None:
-    print(await state.get_state())
+    await state.set_state(AppState.info)
     await message.reply(text=HELP_TEXT)
 
 
 @infoRouter.message(default_state, F.text == USER_INFO_BUTTON_TEXT)
-@infoRouter.message(InfoState.waitPressButtons, F.text == USER_INFO_BUTTON_TEXT)
+@infoRouter.message(AppState.info, F.text == USER_INFO_BUTTON_TEXT)
 async def getUserInfo(message: Message, state: FSMContext) -> None:
     await state.set_state(InfoState.userInfo)
 
@@ -48,6 +48,7 @@ async def getUserInfo(message: Message, state: FSMContext) -> None:
     await message.answer(text=USER_INFO_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
+@infoRouter.message(default_state, F.text == ASSERT_BUTTON_TEXT)
 @infoRouter.message(InfoState.userInfo, F.text == ASSERT_BUTTON_TEXT)
 async def assertError(message: Message, state: FSMContext) -> None:
     await state.set_state(InfoState.assertError)
@@ -57,7 +58,7 @@ async def assertError(message: Message, state: FSMContext) -> None:
 @infoRouter.message(InfoState.assertError)
 async def sendAssertedError(message: Message, state: FSMContext) -> None:
     print(message.text)
-    await state.set_state(InfoState.userInfo)
+    await state.set_state(AppState.info)
     await message.reply(text=ASSERT_MESSAGE_SUCCESS)
 
 
@@ -73,7 +74,7 @@ async def exitFromAccount(message: Message, state: FSMContext) -> None:
 
 
 @infoRouter.message(default_state, F.text == CONTINUE_BUTTON_TEXT)
-@infoRouter.message(InfoState.waitPressButtons, F.text == CONTINUE_BUTTON_TEXT)
+@infoRouter.message(AppState.info, F.text == CONTINUE_BUTTON_TEXT)
 async def continueAction(message: Message, state: FSMContext) -> None:
     await state.set_state(AppState.actionList)
     await actionListHandlerInit(message, state)

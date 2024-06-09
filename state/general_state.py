@@ -7,3 +7,4 @@ class AppState(StatesGroup):
     info = State()
     actionList = State()
     createPurchase = State()
+    commonPurchaseAnalysis = State()

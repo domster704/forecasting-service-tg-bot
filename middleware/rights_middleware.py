@@ -3,13 +3,8 @@ from typing import Callable, Dict, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.dispatcher.flags import get_flag
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import TelegramObject, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import TelegramObject
 from sqlalchemy.orm import Session
-
-from db.db import User
-from res.login_text import *
-from state.general_state import AppState
 
 
 class RightsCheckMiddleware(BaseMiddleware):

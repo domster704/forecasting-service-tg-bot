@@ -2,7 +2,7 @@ from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import TelegramObject, InlineKeyboardButton, ReplyKeyboardRemove
+from aiogram.types import TelegramObject, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.orm import Session
 
@@ -12,6 +12,10 @@ from state.general_state import AppState
 
 
 class AuthorizationCheckMiddleware(BaseMiddleware):
+    """
+    Middleware проверяет авторизован ли пользователь.
+    """
+
     def __init__(self, session: Session, storage: MemoryStorage):
         self.session: Session = session
         self.storage: MemoryStorage = storage
@@ -22,6 +26,14 @@ class AuthorizationCheckMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: Dict[str, Any],
     ) -> Any:
+        """
+        Если пользователь не авторизован, то отправляет пользователю сообщение с текстом {PERMISSION_AUTH_ERROR_TEXT}.
+        Если пользователь авторизован, то вызывает функцию {handler}.
+        :param handler:
+        :param event:
+        :param data:
+        :return:
+        """
         try:
             if await self.session.get(User, event.chat.id) is None:
                 raise PermissionError(PERMISSION_AUTH_ERROR_TEXT)
@@ -35,8 +47,8 @@ class AuthorizationCheckMiddleware(BaseMiddleware):
                 text=DO_AUTHORIZATION,
                 callback_data=TRY_AGAIN_ACTION
             ))
-            
-            await event.answer(pe.__str__(), reply_markup=builder.as_markup())
+
+            return await event.answer(pe.__str__(), reply_markup=builder.as_markup())
         except Exception as e:
             print(e)
-            await event.answer(PERMISSION_AUTH_ERROR_TEXT)
+            return await event.answer(PERMISSION_AUTH_ERROR_TEXT)
