@@ -1,3 +1,7 @@
+"""
+Раздел <Авторизация>
+"""
+
 from aiogram import types, Router, F
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -6,7 +10,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import session
 from db.db import User
-from handlers.info import infoHandlerInit
+from handlers.info_handler import infoHandlerInit
 from res.general_text import SOMETHING_WRONG
 from res.login_text import *
 from state.auth_state import AuthState

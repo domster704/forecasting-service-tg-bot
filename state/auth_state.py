@@ -2,5 +2,8 @@ from aiogram.fsm.state import StatesGroup, State
 
 
 class AuthState(StatesGroup):
-    login = State()
-    password = State()
+    """
+    Класс для описания состояний в разделе <Авторизация>
+    """
+    login = State()  # Состояние ввода логина/почты
+    password = State()  # Состояние ввода пароля

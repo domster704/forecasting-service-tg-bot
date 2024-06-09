@@ -1,3 +1,7 @@
+"""
+Раздел <Общий анализ закупок>
+"""
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
@@ -5,7 +9,7 @@ from aiogram.types import KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from res.action_list_text import COMMON_ANALYSIS_BUTTON_TEXT
-from res.common_purchases_analysis_text import *
+from res.general_purchases_analysis_text import *
 from res.info_text import *
 from state.general_state import AppState
 

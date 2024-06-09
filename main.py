@@ -7,9 +7,9 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from config import dp, bot, session, stateStorage
 from handlers.actions_list_handler import actionListRouter
 from handlers.back_handler import backRouter
-from handlers.common_purchases_analysis import commonPurchasesAnalysisRouter
-from handlers.info import infoRouter
-from handlers.login import loginRouter, loginHandlerInit
+from handlers.general_purchases_analysis_handler import commonPurchasesAnalysisRouter
+from handlers.info_handler import infoRouter
+from handlers.login_handler import loginRouter, loginHandlerInit
 from middleware.auth_middleware import AuthorizationCheckMiddleware
 from res.general_text import *
 from state.general_state import AppState

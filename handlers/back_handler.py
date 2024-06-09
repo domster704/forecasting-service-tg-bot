@@ -1,10 +1,14 @@
+"""
+Раздел с кнопками Назад для возврата на предыдущий шаг/этап
+"""
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message
 
 from handlers.actions_list_handler import actionListHandlerInit
-from handlers.info import infoHandlerInit
+from handlers.info_handler import infoHandlerInit
 from res.general_text import BACK_BUTTON_TEXT
 from state.general_state import AppState
 from state.info_state import InfoState
@@ -17,7 +21,7 @@ backRouter = Router()
 @backRouter.message(AppState.info, F.text == BACK_BUTTON_TEXT)
 async def backActionUserInfo(message: Message, state: FSMContext) -> None:
     """
-    Кнопка назад в блоке <Информация о пользователе>.
+    Кнопка назад в блоке <Информация о пользователе и помощь>.
     Используется по умолчанию, если есть только default_state
     :param message:
     :param state:

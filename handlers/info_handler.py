@@ -1,3 +1,7 @@
+"""
+Раздел <Информация о пользователе и помощь>
+"""
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
