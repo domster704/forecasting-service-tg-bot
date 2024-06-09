@@ -21,6 +21,12 @@ infoRouter = Router()
 
 @infoRouter.message(AppState.info, F.text == TRANSITION_BUTTON_TEXT)
 async def infoHandlerInit(message: Message, state: FSMContext) -> None:
+    """
+    Функция-инициализатор для раздела <Информация о пользователе и помощь>.
+    Создает навигационные кнопки
+    :param message:
+    :param state:
+    """
     await state.set_state(AppState.info, )
 
     keyboard = ReplyKeyboardBuilder().add(
@@ -35,6 +41,12 @@ async def infoHandlerInit(message: Message, state: FSMContext) -> None:
 @infoRouter.message(default_state, F.text == HELP_BUTTON_TEXT)
 @infoRouter.message(AppState.info, F.text == HELP_BUTTON_TEXT)
 async def getHelp(message: Message, state: FSMContext) -> None:
+    """
+    Функция, которая выводит справочную информацию при нажатии на кнопку {HELP_BUTTON_TEXT}.
+    :param message:
+    :param state:
+    :return:
+    """
     await state.set_state(AppState.info)
     await message.reply(text=HELP_TEXT)
 
@@ -42,6 +54,13 @@ async def getHelp(message: Message, state: FSMContext) -> None:
 @infoRouter.message(default_state, F.text == USER_INFO_BUTTON_TEXT)
 @infoRouter.message(AppState.info, F.text == USER_INFO_BUTTON_TEXT)
 async def getUserInfo(message: Message, state: FSMContext) -> None:
+    """
+    Функция, которая переходит в подраздел <Информация о пользователе>.
+    Создает навигационные кнопки.
+    :param message:
+    :param state:
+    :return:
+    """
     await state.set_state(InfoState.userInfo)
 
     keyboard = ReplyKeyboardBuilder().add(
@@ -55,12 +74,25 @@ async def getUserInfo(message: Message, state: FSMContext) -> None:
 @infoRouter.message(default_state, F.text == ASSERT_BUTTON_TEXT)
 @infoRouter.message(InfoState.userInfo, F.text == ASSERT_BUTTON_TEXT)
 async def assertError(message: Message, state: FSMContext) -> None:
+    """
+    Функция, которая позволяет отправить сообщение об ошибке.
+    Запрашивает ввести текстом сообщение
+    :param message:
+    :param state:
+    :return:
+    """
     await state.set_state(InfoState.assertError)
     await message.answer(text=ASSERT_MESSAGE_TEXT)
 
 
 @infoRouter.message(InfoState.assertError)
 async def sendAssertedError(message: Message, state: FSMContext) -> None:
+    """
+    Функция, которая отправляет введенное сообщение об ошибке.
+    :param message:
+    :param state:
+    :return:
+    """
     print(message.text)
     await state.set_state(AppState.info)
     await message.reply(text=ASSERT_MESSAGE_SUCCESS)
@@ -69,6 +101,12 @@ async def sendAssertedError(message: Message, state: FSMContext) -> None:
 @infoRouter.message(default_state, F.text == EXIT_BUTTON_TEXT)
 @infoRouter.message(InfoState.userInfo, F.text == EXIT_BUTTON_TEXT)
 async def exitFromAccount(message: Message, state: FSMContext) -> None:
+    """
+    Функция, которая позволяет выйти из аккаунта.
+    :param message:
+    :param state:
+    :return:
+    """
     isSuccessLogout: bool = await logout(message.chat.id)
     if isSuccessLogout:
         await message.answer(text=EXIT_SUCCESS_TEXT, reply_markup=ReplyKeyboardRemove())
@@ -80,5 +118,11 @@ async def exitFromAccount(message: Message, state: FSMContext) -> None:
 @infoRouter.message(default_state, F.text == CONTINUE_BUTTON_TEXT)
 @infoRouter.message(AppState.info, F.text == CONTINUE_BUTTON_TEXT)
 async def continueAction(message: Message, state: FSMContext) -> None:
+    """
+    Функция для перехода к следующему разделу <Общий список действий>.
+    :param message:
+    :param state:
+    :return:
+    """
     await state.set_state(AppState.actionList)
     await actionListHandlerInit(message, state)
