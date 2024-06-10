@@ -10,3 +10,4 @@ class AppState(StatesGroup):
     actionList = State()  # шаг общего списка действий
     createPurchase = State()  # шаг создания закупки
     commonPurchaseAnalysis = State()  # шаг общего анализа закупки
+    balanceState = State()  # шаг баланса

@@ -1,8 +1,10 @@
-from aiogram.fsm.state import StatesGroup
+from aiogram.fsm.state import StatesGroup, State
 
 
 class BalanceState(StatesGroup):
     """
     Класс для описания состояний в разделе <Баланс>
     """
-    pass
+
+    editAccount = State()
+    editBalance = State()

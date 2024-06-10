@@ -8,7 +8,8 @@ from aiogram.fsm.state import default_state
 from aiogram.types import KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from handlers.general_purchases_analysis_handler import commonPurchaseAnalysis
+from handlers.balance_handler import balanceInit
+from handlers.general_purchases_analysis_handler import commonPurchaseAnalysisInit
 from res.action_list_text import *
 from res.info_text import *
 from state.general_state import AppState
@@ -37,5 +38,11 @@ async def actionListHandlerInit(message: Message, state: FSMContext) -> None:
 
 @actionListRouter.message(default_state, F.text == COMMON_ANALYSIS_BUTTON_TEXT)
 @actionListRouter.message(AppState.actionList, F.text == COMMON_ANALYSIS_BUTTON_TEXT)
-async def commonAnalysisGo(message: Message, state: FSMContext) -> None:
-    await commonPurchaseAnalysis(message, state)
+async def commonAnalysisGoTo(message: Message, state: FSMContext) -> None:
+    await commonPurchaseAnalysisInit(message, state)
+
+
+@actionListRouter.message(default_state, F.text == BALANCE_BUTTON_TEXT)
+@actionListRouter.message(AppState.actionList, F.text == BALANCE_BUTTON_TEXT)
+async def balanceGoTo(message: Message, state: FSMContext) -> None:
+    await balanceInit(message, state)

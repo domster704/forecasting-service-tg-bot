@@ -44,7 +44,19 @@ async def backButtonActionList(message: Message, state: FSMContext) -> None:
 
 
 @backRouter.message(AppState.commonPurchaseAnalysis, F.text == BACK_BUTTON_TEXT)
-async def backButtonActionList(message: Message, state: FSMContext) -> None:
+async def backButtonGeneralPurchaseAnalysis(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Общий анализ закупок>
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(AppState.actionList)
+    await actionListHandlerInit(message, state)
+
+
+@backRouter.message(AppState.balanceState, F.text == BACK_BUTTON_TEXT)
+async def backButtonBalance(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Общий анализ закупок>
     :param message:
