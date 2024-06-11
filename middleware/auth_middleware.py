@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from db.db import User
 from res.login_text import *
-from state.general_state import AppState
+from state.app_state import AppState
 
 
 class AuthorizationCheckMiddleware(BaseMiddleware):

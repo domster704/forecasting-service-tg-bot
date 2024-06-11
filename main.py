@@ -11,9 +11,10 @@ from handlers.balance_handler import balanceRouter
 from handlers.general_purchases_analysis_handler import commonPurchasesAnalysisRouter
 from handlers.info_handler import infoRouter
 from handlers.login_handler import loginRouter, loginHandlerInit
+from handlers.product_handler import productRouter
 from middleware.auth_middleware import AuthorizationCheckMiddleware
 from res.general_text import *
-from state.general_state import AppState
+from state.app_state import AppState
 
 
 @dp.message(Command(START_COMMAND))
@@ -35,6 +36,7 @@ if __name__ == "__main__":
         actionListRouter,
         commonPurchasesAnalysisRouter,
         balanceRouter,
+        productRouter,
         backRouter,
     ]
     for router in routerListForAuthRequired:

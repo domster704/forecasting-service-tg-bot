@@ -9,9 +9,11 @@ from aiogram.types import Message
 
 from handlers.actions_list_handler import actionListHandlerInit
 from handlers.info_handler import infoHandlerInit
+from handlers.product_handler import productInit
 from res.general_text import BACK_BUTTON_TEXT
-from state.general_state import AppState
+from state.app_state import AppState
 from state.info_state import InfoState
+from state.product_state import ProductState
 
 backRouter = Router()
 
@@ -65,3 +67,28 @@ async def backButtonBalance(message: Message, state: FSMContext) -> None:
     """
     await state.set_state(AppState.actionList)
     await actionListHandlerInit(message, state)
+
+
+@backRouter.message(ProductState.productName, F.text == BACK_BUTTON_TEXT)
+async def backButtonProductName(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Товар>:`ввод имени товара`
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(AppState.actionList)
+    await actionListHandlerInit(message, state)
+
+
+@backRouter.message(ProductState.productNameSuggestedList, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(ProductState.enterProductNumFromList, F.text == BACK_BUTTON_TEXT)
+async def backButtonProductSuggestedList(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Товар>:`список товаров с пагинацией`
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(AppState.product)
+    await productInit(message, state)

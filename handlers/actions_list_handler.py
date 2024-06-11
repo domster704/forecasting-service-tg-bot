@@ -10,9 +10,10 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from handlers.balance_handler import balanceInit
 from handlers.general_purchases_analysis_handler import commonPurchaseAnalysisInit
+from handlers.product_handler import enterProductName, productInit
 from res.action_list_text import *
 from res.info_text import *
-from state.general_state import AppState
+from state.app_state import AppState
 
 actionListRouter = Router()
 
@@ -46,3 +47,9 @@ async def commonAnalysisGoTo(message: Message, state: FSMContext) -> None:
 @actionListRouter.message(AppState.actionList, F.text == BALANCE_BUTTON_TEXT)
 async def balanceGoTo(message: Message, state: FSMContext) -> None:
     await balanceInit(message, state)
+
+
+@actionListRouter.message(default_state, F.text == ENTER_PRODUCT_NAME_BUTTON_TEXT)
+@actionListRouter.message(AppState.actionList, F.text == ENTER_PRODUCT_NAME_BUTTON_TEXT)
+async def productGoTo(message: Message, state: FSMContext) -> None:
+    await productInit(message, state)

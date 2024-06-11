@@ -16,7 +16,7 @@ from handlers.info_handler import infoHandlerInit
 from res.general_text import SOMETHING_WRONG
 from res.login_text import *
 from state.auth_state import AuthState
-from state.general_state import AppState
+from state.app_state import AppState
 
 loginRouter = Router()
 

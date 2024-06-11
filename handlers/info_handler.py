@@ -13,7 +13,7 @@ from handlers.actions_list_handler import actionListHandlerInit
 from res.general_text import SOMETHING_WRONG
 from res.info_text import *
 from res.login_text import TRANSITION_BUTTON_TEXT
-from state.general_state import AppState
+from state.app_state import AppState
 from state.info_state import InfoState
 
 infoRouter = Router()

@@ -8,6 +8,6 @@ class AppState(StatesGroup):
     login = State()  # шаг авторизации
     info = State()  # шаг информации о пользователе и о помощи
     actionList = State()  # шаг общего списка действий
-    createPurchase = State()  # шаг создания закупки
+    product = State()  # шаг создания закупки
     commonPurchaseAnalysis = State()  # шаг общего анализа закупки
     balanceState = State()  # шаг баланса

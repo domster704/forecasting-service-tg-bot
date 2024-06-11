@@ -10,9 +10,9 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from res.action_list_text import COMMON_ANALYSIS_BUTTON_TEXT
 from res.balance_text import *
-from res.info_text import *
+from res.general_text import *
+from state.app_state import AppState
 from state.balance_state import BalanceState
-from state.general_state import AppState
 from utils import isFloat
 
 balanceRouter = Router()
