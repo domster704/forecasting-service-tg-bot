@@ -96,14 +96,14 @@ async def backButtonProductSuggestedList(message: Message, state: FSMContext) ->
 
 @backRouter.message(ProductState.productWaitActions, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(ProductState.productActions, F.text == BACK_BUTTON_TEXT)
-async def backButtonProductActions(message: Message, state: FSMContext) -> None:
+async def backButtonPagination(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Товар>:`список товаров с пагинацией`
     :param message:
     :param state:
     :return:
     """
-    await state.set_state(ProductState.productNameSuggestedList)
+    await state.set_state(ProductState.productName)
     await productInit(message, state)
 
 
@@ -120,12 +120,24 @@ async def backButtonProductActions(message: Message, state: FSMContext) -> None:
 
 
 @backRouter.message(AppState.productAnalysis, F.text == BACK_BUTTON_TEXT)
-async def backButtonProductActions(message: Message, state: FSMContext) -> None:
+async def backButtonProductAnalysis(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Аналитика по товару>
     :param message:
     :param state:
     :return:
     """
-    await state.set_state(ProductState.productNameSuggestedList)
+    await state.set_state(ProductState.productActions)
+    await productActionsInit(message, state)
+
+
+@backRouter.message(ProductState.waitPurchaseActions, F.text == BACK_BUTTON_TEXT)
+async def backButtonPurchaseActions(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Закупка>
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(ProductState.productActions)
     await productActionsInit(message, state)

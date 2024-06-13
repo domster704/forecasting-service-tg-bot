@@ -8,6 +8,7 @@ from config import dp, bot, session, stateStorage
 from handlers.actions_list_handler import actionListRouter
 from handlers.back_handler import backRouter
 from handlers.balance_handler import balanceRouter
+from handlers.create_purchase import createPurchaseRouter
 from handlers.general_purchases_analysis_handler import commonPurchasesAnalysisRouter
 from handlers.info_handler import infoRouter
 from handlers.login_handler import loginRouter, loginHandlerInit
@@ -39,6 +40,7 @@ if __name__ == "__main__":
         balanceRouter,
         productRouter,
         productAnalysisRouter,
+        createPurchaseRouter,
         backRouter,
     ]
     for router in routerListForAuthRequired:

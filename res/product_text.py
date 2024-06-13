@@ -24,3 +24,18 @@ MONTH_TEXT = "Месяц"
 QUARTER_TEXT = "Квартал"
 
 SELECT_PERIOD_TEXT = lambda period: f"""Вы выбрали период {period}"""
+
+CREATE_PURCHASE_INIT_MESSAGE_TEXT = ("Для создания закупки введите количество товара, субсчет, с баланса которого "
+                                     "будет списываться сумма")
+INPUT_PRODUCT_AMOUNT_TEXT = "Введите количество товара"
+INPUT_SUB_ACCOUNT_TEXT = "Введите номер суб-субсчета"
+
+PURCHASE_CREATE_SUCCESS_MESSAGE_TEXT = lambda purchase: f"Закупка {purchase} успешно создан"
+
+CREATE_BUTTON_TEXT = "Создать"
+EDIT_BUTTON_TEXT = "Редактировать"
+
+WRONG_EDIT_PURCHASE_BECAUSE_NONE = ("Нет существующей закупки для данного товара. Для редактирования необходимо "
+                                    "сначала создать закупку")
+
+PURCHASE_EDIT_SUCCESS_MESSAGE_TEXT = lambda purchase: f"Закупка {purchase} сейчас будет изменена"
