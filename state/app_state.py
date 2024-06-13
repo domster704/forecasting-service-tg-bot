@@ -11,3 +11,4 @@ class AppState(StatesGroup):
     product = State()  # шаг создания закупки
     commonPurchaseAnalysis = State()  # шаг общего анализа закупки
     balanceState = State()  # шаг баланса
+    productAnalysis = State()  # шаг общего анализа товара

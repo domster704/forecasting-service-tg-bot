@@ -117,3 +117,15 @@ async def backButtonProductActions(message: Message, state: FSMContext) -> None:
     """
     await state.set_state(ProductState.productNameSuggestedList)
     await productActionsInit(message, state)
+
+
+@backRouter.message(AppState.productAnalysis, F.text == BACK_BUTTON_TEXT)
+async def backButtonProductActions(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Аналитика по товару>
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(ProductState.productNameSuggestedList)
+    await productActionsInit(message, state)

@@ -8,6 +8,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+from handlers.product_analysis_handler import productAnalysisInit
 from pagination import Pagination
 from res.action_list_text import ENTER_PRODUCT_NAME_BUTTON_TEXT
 from res.product_text import *
@@ -145,3 +146,4 @@ async def suggestProductYear(message: Message, state: FSMContext) -> None:
     #                                            caption=SUGGESTED_PRODUCT_TEXT,
     #                                            # reply_markup=ReplyKeyboardRemove()
     #                                            )
+
