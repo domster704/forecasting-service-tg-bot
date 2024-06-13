@@ -9,3 +9,10 @@ class ProductState(StatesGroup):
     productNameSuggestedList = State()
     enterProductNumFromList = State()
 
+    productActions = State()
+    productWaitActions = State()
+    productAnalysis = State()
+    productSuggestion = State()
+    productPurchase = State()
+
+    choosePeriod = State()

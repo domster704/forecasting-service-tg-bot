@@ -15,6 +15,8 @@ bot = Bot(token=__env["apiTG"],
               parse_mode=ParseMode.HTML
           ))
 
+apiURL: str = __env["apiURL"]
+
 stateStorage = MemoryStorage()
 dp = Dispatcher(storage=stateStorage)
 

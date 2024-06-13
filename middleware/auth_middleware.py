@@ -7,6 +7,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.orm import Session
 
 from db.db import User
+from res.general_text import SOMETHING_WRONG
 from res.login_text import *
 from state.app_state import AppState
 
@@ -51,4 +52,4 @@ class AuthorizationCheckMiddleware(BaseMiddleware):
             return await event.answer(pe.__str__(), reply_markup=builder.as_markup())
         except Exception as e:
             print(e)
-            return await event.answer(PERMISSION_AUTH_ERROR_TEXT)
+            return await event.answer(SOMETHING_WRONG)
