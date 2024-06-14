@@ -2,6 +2,8 @@
 Раздел <Закупка>
 """
 
+from __future__ import annotations
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton
@@ -31,12 +33,16 @@ async def purchaseProductInit(message: Message, state: FSMContext) -> None:
 
 
 @createPurchaseRouter.message(ProductState.waitPurchaseActions, F.text == EDIT_BUTTON_TEXT)
-async def editPurchase(message: Message, state: FSMContext) -> None:
-    if 'purchase' not in (await state.get_data()).keys():
+async def editPurchase(message: Message, state: FSMContext, active_purchase: PurchaseProduct = None) -> None:
+    if active_purchase is None and 'purchase' not in (await state.get_data()).keys():
         await message.answer(text=WRONG_EDIT_PURCHASE_BECAUSE_NONE)
         return
 
-    purchase: PurchaseProduct = (await state.get_data())['purchase']
+    # Устанавливаем флаг для того, чтобы понять, что это редактирование активной закупки из раздела <Активные закупки>
+    if active_purchase is not None:
+        await state.update_data(isActivePurchaseEdit=True)
+
+    purchase: PurchaseProduct = (await state.get_data())['purchase'] if active_purchase is None else active_purchase
     await message.answer(text=PURCHASE_EDIT_SUCCESS_MESSAGE_TEXT(purchase.__str__()))
     await createPurchase(message, state)
 
@@ -61,14 +67,19 @@ async def inputProductAmount(message: Message, state: FSMContext) -> None:
 
 
 @createPurchaseRouter.message(ProductState.inputSubAccount)
-async def inputProductAmount(message: Message, state: FSMContext) -> None:
+async def finishCreatePurchase(message: Message, state: FSMContext) -> None:
     subAccount: str = message.text
     await state.update_data(sub_account=subAccount)
 
-    purchaseProduct = PurchaseProduct(**(await state.get_data()))
-    await state.update_data(purchase=purchaseProduct)
-
+    purchaseProduct: PurchaseProduct = PurchaseProduct(**(await state.get_data()))
     await message.answer(text=PURCHASE_CREATE_SUCCESS_MESSAGE_TEXT(purchaseProduct.__str__()))
+
+    if 'isActivePurchaseEdit' in (await state.get_data()).keys():
+        await state.update_data(active_purchase=purchaseProduct)
+        await (await state.get_data())['edit_active_purchase_callback'](message, state)
+        return
+
+    await state.update_data(purchase=purchaseProduct)
 
     await state.set_state(ProductState.productActions)
     await productActionsInit(message, state)

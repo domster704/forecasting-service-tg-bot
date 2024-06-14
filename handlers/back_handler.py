@@ -8,6 +8,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import Message
 
 from handlers.actions_list_handler import actionListHandlerInit
+from handlers.active_purchase import activePurchaseInit
 from handlers.info_handler import infoHandlerInit
 from handlers.product_handler import productInit, productActionsInit, enterProductName
 from res.general_text import BACK_BUTTON_TEXT
@@ -157,6 +158,7 @@ async def backButtonPurchaseActions(message: Message, state: FSMContext) -> None
 
 
 @backRouter.message(AppState.activePurchase, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(ActivePurchaseState.purchaseList, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(ActivePurchaseState.choosePurchase, F.text == BACK_BUTTON_TEXT)
 async def backButtonActivePurchase(message: Message, state: FSMContext) -> None:
     """
@@ -167,3 +169,15 @@ async def backButtonActivePurchase(message: Message, state: FSMContext) -> None:
     """
     await state.set_state(AppState.actionList)
     await actionListHandlerInit(message, state)
+
+
+@backRouter.message(ActivePurchaseState.editPurchase, F.text == BACK_BUTTON_TEXT)
+async def backButtonEditActivePurchase(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Активные закупки>:`редактировать закупку`
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(AppState.actionList)
+    await activePurchaseInit(message, state)
