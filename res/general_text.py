@@ -7,3 +7,5 @@ BACK_BUTTON_TEXT = 'Назад'
 
 SOMETHING_WRONG = 'Что-то пошло не так'
 PERMISSION_RIGHTS_ERROR_TEXT = "Недостаточно прав"
+
+CALLBACK_DATA_PAGINATION_END = ''

@@ -17,6 +17,7 @@ from handlers.login_handler import loginRouter, loginHandlerInit
 from handlers.product_analysis_handler import productAnalysisRouter
 from handlers.product_handler import productRouter
 from middleware.auth_middleware import AuthorizationCheckMiddleware
+from pagination import paginationRouter
 from res.general_text import *
 from state.app_state import AppState
 
@@ -54,6 +55,7 @@ if __name__ == "__main__":
         productAnalysisRouter,
         createPurchaseRouter,
         activePurchaseRouter,
+        paginationRouter,
         backRouter,
     ]
     for router in routerListForAuthRequired:

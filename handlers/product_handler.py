@@ -2,7 +2,7 @@
 Раздел <Товар>
 """
 
-from aiogram import Router, F, types
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton
@@ -61,9 +61,10 @@ async def showProductNameSuggestedList(message: Message, state: FSMContext) -> N
         "Пилот на 17 гнезд",
         "Пилот на 18 гнезд",
     ]
+
+    CALLBACK_DATA_PAGINATION_END = "product"
     pagination: Pagination = Pagination(
         items=items,
-        callback_data_end=CALLBACK_DATA_PRODUCT_END,
     )
     await state.update_data(pagination=pagination)
 
@@ -74,22 +75,6 @@ async def showProductNameSuggestedList(message: Message, state: FSMContext) -> N
     await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
     await message.answer(**pagination.getMessageData())
     await state.set_state(ProductState.enterProductNumFromList)
-
-
-@productRouter.callback_query(F.data == f"{Pagination.CALLBACK_DATA_START_NEXT}{CALLBACK_DATA_PRODUCT_END}")
-async def nextPageProduct(callback: types.CallbackQuery, state: FSMContext) -> None:
-    pagination: Pagination = (await state.get_data())["pagination"]
-    await callback.message.edit_text(**pagination
-                                     .nextPage()
-                                     .getMessageData())
-
-
-@productRouter.callback_query(F.data == f"{Pagination.CALLBACK_DATA_START_PREV}{CALLBACK_DATA_PRODUCT_END}")
-async def nextPageProduct(callback: types.CallbackQuery, state: FSMContext) -> None:
-    pagination: Pagination = (await state.get_data())["pagination"]
-    await callback.message.edit_text(**pagination
-                                     .prevPage()
-                                     .getMessageData())
 
 
 @productRouter.message(ProductState.enterProductNumFromList, F.text != BACK_BUTTON_TEXT)

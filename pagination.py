@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from typing import Union
 
+from aiogram import Router, F, types
+from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from res.active_purchase_text import CALLBACK_DATA_ACTIVE_PURCHASE_END
 
 
 class Pagination(object):
@@ -84,3 +88,24 @@ class Pagination(object):
 
     def getMessageData(self) -> dict[str, InlineKeyboardMarkup | str]:
         return {"text": self.__getMessageText(), "reply_markup": self.keyboard}
+
+
+paginationRouter = Router()
+
+
+@paginationRouter.callback_query(
+    F.data == f"{Pagination.CALLBACK_DATA_START_NEXT}")
+async def nextPageProduct(callback: types.CallbackQuery, state: FSMContext) -> None:
+    pagination: Pagination = (await state.get_data())["pagination"]
+    await callback.message.edit_text(**pagination
+                                     .nextPage()
+                                     .getMessageData())
+
+
+@paginationRouter.callback_query(
+    F.data == f"{Pagination.CALLBACK_DATA_START_PREV}")
+async def nextPageProduct(callback: types.CallbackQuery, state: FSMContext) -> None:
+    pagination: Pagination = (await state.get_data())["pagination"]
+    await callback.message.edit_text(**pagination
+                                     .prevPage()
+                                     .getMessageData())

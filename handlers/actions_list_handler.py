@@ -8,6 +8,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+from handlers.active_purchase import activePurchaseInit
 from handlers.balance_handler import balanceInit
 from handlers.general_purchases_analysis_handler import commonPurchaseAnalysisInit
 from handlers.product_handler import productInit
@@ -57,4 +58,4 @@ async def productGoTo(message: Message, state: FSMContext) -> None:
 
 @actionListRouter.message(AppState.actionList, F.text == ACTIVE_PURCHASE_BUTTON_TEXT)
 async def activePurchaseGoTo(message: Message, state: FSMContext) -> None:
-    await productInit(message, state)
+    await activePurchaseInit(message, state)

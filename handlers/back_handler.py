@@ -11,6 +11,7 @@ from handlers.actions_list_handler import actionListHandlerInit
 from handlers.info_handler import infoHandlerInit
 from handlers.product_handler import productInit, productActionsInit, enterProductName
 from res.general_text import BACK_BUTTON_TEXT
+from state.active_purchase_state import ActivePurchaseState
 from state.app_state import AppState
 from state.info_state import InfoState
 from state.product_state import ProductState
@@ -153,3 +154,16 @@ async def backButtonPurchaseActions(message: Message, state: FSMContext) -> None
     """
     await state.set_state(ProductState.productActions)
     await productActionsInit(message, state)
+
+
+@backRouter.message(AppState.activePurchase, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(ActivePurchaseState.choosePurchase, F.text == BACK_BUTTON_TEXT)
+async def backButtonActivePurchase(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Активные закупки>
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(AppState.actionList)
+    await actionListHandlerInit(message, state)
