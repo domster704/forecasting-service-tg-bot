@@ -60,11 +60,16 @@ async def editBalanceSum(message: Message, state: FSMContext) -> None:
 
 @balanceRouter.message(BalanceState.editBalance)
 async def completeEditBalance(message: Message, state: FSMContext) -> None:
-    formattedBalanceSum: str = message.text.replace(",", ".")
-    balanceSum: float | str = float(formattedBalanceSum) if isFloat(formattedBalanceSum) else formattedBalanceSum
-    print(balanceSum)
-    await state.update_data(balanceSum=balanceSum)
+    try:
+        formattedBalanceSum: str = message.text.replace(",", ".")
+        balanceSum: float | str = float(formattedBalanceSum) if isFloat(formattedBalanceSum) else formattedBalanceSum
+        print(balanceSum)
+        await state.update_data(balanceSum=balanceSum)
 
-    await state.set_state(AppState.balanceState)
+        await state.set_state(AppState.balanceState)
 
-    print(await state.get_data())
+        print(await state.get_data())
+        await balanceInit(message, state)
+    except Exception as e:
+        print(e)
+        await message.answer(text=SOMETHING_WRONG)

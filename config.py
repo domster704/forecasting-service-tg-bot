@@ -20,5 +20,5 @@ apiURL: str = __env["apiURL"]
 stateStorage = MemoryStorage()
 dp = Dispatcher(storage=stateStorage)
 
-__Session = async_sessionmaker(bind=engine)
-session = __Session()
+AsyncSessionDB = async_sessionmaker(bind=engine)
+session = AsyncSessionDB()

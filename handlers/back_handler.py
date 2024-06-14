@@ -9,7 +9,7 @@ from aiogram.types import Message
 
 from handlers.actions_list_handler import actionListHandlerInit
 from handlers.info_handler import infoHandlerInit
-from handlers.product_handler import productInit, productActionsInit
+from handlers.product_handler import productInit, productActionsInit, enterProductName
 from res.general_text import BACK_BUTTON_TEXT
 from state.app_state import AppState
 from state.info_state import InfoState
@@ -117,6 +117,18 @@ async def backButtonProductActions(message: Message, state: FSMContext) -> None:
     """
     await state.set_state(ProductState.productNameSuggestedList)
     await productActionsInit(message, state)
+
+
+@backRouter.message(ProductState.productNameSuggestedList, F.text == BACK_BUTTON_TEXT)
+async def backButtonSuggestedList(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Товар>:`список действий с товаром`
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(ProductState.productName)
+    await enterProductName(message, state)
 
 
 @backRouter.message(AppState.productAnalysis, F.text == BACK_BUTTON_TEXT)

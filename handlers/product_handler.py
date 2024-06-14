@@ -65,8 +65,13 @@ async def showProductNameSuggestedList(message: Message, state: FSMContext) -> N
         items=items,
         callback_data_end=CALLBACK_DATA_PRODUCT_END,
     )
-
     await state.update_data(pagination=pagination)
+
+    keyboard = ReplyKeyboardBuilder().add(
+        KeyboardButton(text=BACK_BUTTON_TEXT)
+    )
+
+    await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
     await message.answer(**pagination.getMessageData())
     await state.set_state(ProductState.enterProductNumFromList)
 

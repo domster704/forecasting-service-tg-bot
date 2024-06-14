@@ -32,7 +32,7 @@ async def infoHandlerInit(message: Message, state: FSMContext) -> None:
     keyboard = ReplyKeyboardBuilder().add(
         KeyboardButton(text=CONTINUE_BUTTON_TEXT)
     ).row(
-        KeyboardButton(text=USER_INFO_BUTTON_TEXT),
+        KeyboardButton(text=EXIT_BUTTON_TEXT),
         KeyboardButton(text=HELP_BUTTON_TEXT)
     )
     await message.answer(text=INFO_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
@@ -47,28 +47,14 @@ async def getHelp(message: Message, state: FSMContext) -> None:
     :param state:
     :return:
     """
-    await state.set_state(AppState.info)
-    await message.reply(text=HELP_TEXT)
-
-
-@infoRouter.message(default_state, F.text == USER_INFO_BUTTON_TEXT)
-@infoRouter.message(AppState.info, F.text == USER_INFO_BUTTON_TEXT)
-async def getUserInfo(message: Message, state: FSMContext) -> None:
-    """
-    Функция, которая переходит в подраздел <Информация о пользователе>.
-    Создает навигационные кнопки.
-    :param message:
-    :param state:
-    :return:
-    """
-    await state.set_state(InfoState.userInfo)
 
     keyboard = ReplyKeyboardBuilder().add(
-        KeyboardButton(text=EXIT_BUTTON_TEXT),
         KeyboardButton(text=ASSERT_BUTTON_TEXT),
-        KeyboardButton(text=BACK_BUTTON_TEXT)
+        KeyboardButton(text=BACK_BUTTON_TEXT),
     )
-    await message.answer(text=USER_INFO_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
+
+    await state.set_state(InfoState.userInfo)
+    await message.reply(text=HELP_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
 @infoRouter.message(default_state, F.text == ASSERT_BUTTON_TEXT)
@@ -96,10 +82,12 @@ async def sendAssertedError(message: Message, state: FSMContext) -> None:
     print(message.text)
     await state.set_state(AppState.info)
     await message.reply(text=ASSERT_MESSAGE_SUCCESS)
+    await infoHandlerInit(message, state)
 
 
 @infoRouter.message(default_state, F.text == EXIT_BUTTON_TEXT)
 @infoRouter.message(InfoState.userInfo, F.text == EXIT_BUTTON_TEXT)
+@infoRouter.message(AppState.info, F.text == EXIT_BUTTON_TEXT)
 async def exitFromAccount(message: Message, state: FSMContext) -> None:
     """
     Функция, которая позволяет выйти из аккаунта.
