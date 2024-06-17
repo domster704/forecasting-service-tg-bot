@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from config import session, apiURL
+from config import session, apiURL, AsyncSessionDB
 from db.db import User
 from db.db_utils import getUser
 from handlers.choose_purchase import choosePurchaseActionList
@@ -76,9 +76,9 @@ async def enterLotId(message: Message, state: FSMContext) -> None:
     }
     await CrateNewPurchaseActions.createNewPurchase(message, purchaseHeader)
 
-    (await session.get(User, message.chat.id)).createPurchase(purchaseHeader)
-    await session.commit()
-    await session.close()
+    async with AsyncSessionDB() as sessionDB:
+        user: User = await sessionDB.get(User, message.chat.id)
+        await user.createPurchase(purchaseHeader, sessionDB)
 
     await state.update_data(active_purchase=purchaseHeader['id'])
     await message.answer(text=CREATE_NEW_PURCHASE_SUCCESS_TEXT)

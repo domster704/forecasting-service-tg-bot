@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from http.cookies import SimpleCookie
+
 import aiohttp
 from aiogram import types, Router, F
 from aiogram.fsm.context import FSMContext
@@ -103,7 +105,7 @@ async def __checkAuthentication(message: types.Message, state: FSMContext,
                 session.add(User(id=message.chat.id, isAuth=auth.isAuth, rights=auth.rights,
                                  type='admin' if auth.isAdmin else 'user', db_id=auth.db_id))
             user = await session.get(User, message.chat.id)
-            user.setCookies(auth.cookies)
+            await user.setCookies(auth.cookies, session)
 
             await session.commit()
 
@@ -144,7 +146,7 @@ class AuthorizationCredentialsChecker(object):
     def __init__(self, login: str, password: str, **kwargs):
         self.__login: str = login
         self.__password: str = password
-        self.cookies: dict = {}
+        self.cookies: SimpleCookie = None
         self.rights: str = ""
         self.isAdmin: bool = False
         self.isAuth: bool = False

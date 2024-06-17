@@ -27,7 +27,7 @@ class ProductAnalysisActions(object):
                 "credit": str(credit)
             }) as r:
                 res = await r.json()
-                print(res)
+
                 if res['state'] != 'Success':
                     return b''
 
@@ -41,7 +41,16 @@ class ProductAnalysisActions(object):
                 "user_pick": product_name,
                 "user_id": user.db_id
             }) as r:
-                return r.status
+                print(await r.json())
+
+        async with aiohttp.ClientSession(headers={
+            'accept': 'application/json',
+        }) as session:
+            async with session.post(f"{apiURL_ML}/v1/ml/matching/set_user_pick/", params={
+                "user_id": user.db_id,
+                "user_pick": product_name
+            }) as r:
+                print(await r.json())
 
     @staticmethod
     async def lastNPurchase(message, n) -> bytes:
@@ -110,7 +119,6 @@ async def howManyItemsLeft(message: Message, state: FSMContext) -> None:
                          photo=BufferedInputFile(remainsProduct, filename="remains.png"))
 
 
-
 @productAnalysisRouter.message(AppState.productAnalysis, F.text == LAST_N_PURCHASE_BUTTON_TEXT)
 async def lastNPurchase(message: Message, state: FSMContext) -> None:
     lastNPurchase = await ProductAnalysisActions.lastNPurchase(message, 5)
@@ -124,6 +132,8 @@ async def debitCreditProduct(message: Message, state: FSMContext) -> None:
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=PRICE_BUTTON_TEXT),
         KeyboardButton(text=AMOUNT_BUTTON_TEXT)
+    ).row(
+        KeyboardButton(text=BACK_BUTTON_TEXT)
     )
 
     await message.answer(text=DEBIT_CREDIT_PRODUCT_MESSAGE_TEXT,

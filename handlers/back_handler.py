@@ -242,7 +242,7 @@ async def backButtonEditPurchase(message: Message, state: FSMContext) -> None:
     :return:
     """
     await state.set_state(AppState.actionList)
-    await choosePurchaseActionList(message, state)
+    await choosePurchaseInit(message, state)
 
 
 @backRouter.message(ProductState.productStatisticChoosePeriod, F.text == BACK_BUTTON_TEXT)

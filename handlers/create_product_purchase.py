@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from config import session
+from config import AsyncSessionDB
 from db.db import User
 from db.db_utils import getUser
 from handlers.product_handler import productActionsInit
@@ -75,9 +75,15 @@ async def deliveryConditions(message: Message, state: FSMContext) -> None:
     }
     purchaseId = (await state.get_data())['active_purchase']
 
-    user: User = await getUser(message.chat.id)
-    user.putProduct(productData, purchaseId)
-    await session.commit()
+    async with AsyncSessionDB() as session:
+        user: User = await getUser(message.chat.id)
+        await user.putProduct(productData, purchaseId, session)
+    # user: User = await getUser(message.chat.id)
+    # print(user.purchases)
+    # user.putProduct(productData, purchaseId)
+    # print(user.purchases)
+    # await session.commit()
+    # print(user.purchases)
 
     await message.answer(text=ADDING_SUCCESS)
     await productActionsInit(message, state)

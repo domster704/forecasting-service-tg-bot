@@ -10,7 +10,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from db.db_utils import logout
 from handlers.actions_list_handler import actionListHandlerInit
-from res.general_text import SOMETHING_WRONG
+from res.general_text import SOMETHING_WRONG, BACK_BUTTON_TEXT
 from res.info_text import *
 from res.login_text import TRANSITION_BUTTON_TEXT
 from state.app_state import AppState

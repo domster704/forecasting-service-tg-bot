@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton, BufferedInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from config import apiURL, bot, apiURL_ML
+from config import apiURL, bot, apiURL_ML, session
 from db.db import User
 from db.db_utils import getUserCookies, getUser
 from pagination import Pagination
@@ -31,18 +31,14 @@ class ProductActions:
     @staticmethod
     async def pickProduct(message, product_name: str) -> int:
         user: User = await getUser(message.chat.id)
-        async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
+        print(user.db_id, product_name)
+        async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id), headers={
+            'accept': 'application/json',
+        }) as session:
             async with session.post(f"{apiURL}/search/set_user_pick", params={
-                "user_pick ": product_name
+                "user_pick": product_name
             }) as r:
-                pass
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(f"{apiURL_ML}/v1/ml/matching/set_user_pick/", params={
-                "user_id": user.db_id,
-                "user_pick ": product_name
-            }) as r:
-                pass
+                print(await r.json())
 
     @staticmethod
     async def checkRegular(message, product_name: str) -> bool:
@@ -63,7 +59,6 @@ class ProductActions:
                 "summa": str(type)
             }) as r:
                 res = await r.json()
-                print(res)
                 if res['state'] != 'Success':
                     return b''
 
@@ -97,17 +92,17 @@ async def editExistedProduct(message: Message, state: FSMContext) -> None:
         await productInit(message, state)
         return
 
-    keyboard = ReplyKeyboardBuilder().add(
-        KeyboardButton(text=BACK_BUTTON_TEXT)
-    )
-
-    await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
+    # keyboard = ReplyKeyboardBuilder().add(
+    #     KeyboardButton(text=BACK_BUTTON_TEXT)
+    # )
+    #
+    # await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
     await showProductNameSuggestedList(message, state, items=productList)
 
 
 @productRouter.message(ProductState.initActions, F.text == CREATE_BUTTON_TEXT)
-async def editExistedProduct(message: Message, state: FSMContext) -> None:
+async def enterProductNameForShowList(message: Message, state: FSMContext) -> None:
     await state.set_state(ProductState.productName)
 
     keyboard = ReplyKeyboardBuilder().add(
@@ -123,7 +118,11 @@ async def enterProductName(message: Message, state: FSMContext) -> None:
     await state.update_data(productName=productName)
 
     await state.set_state(ProductState.productNameSuggestedList)
-
+    # keyboard = ReplyKeyboardBuilder().add(
+    #     KeyboardButton(text=BACK_BUTTON_TEXT)
+    # )
+    #
+    # await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
     await showProductNameSuggestedList(message, state,
                                        items=await ProductActions.getSuggestedList(message, productName))
 
@@ -166,6 +165,7 @@ async def getProductFromList(message: Message, state: FSMContext) -> None:
 async def productActionsInit(message: Message, state: FSMContext) -> None:
     await state.set_state(ProductState.productWaitActions)
 
+    user: User = await getUser(message.chat.id)
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=ANALYZE_PRODUCT_BUTTON_TEXT),
         KeyboardButton(text=SUGGESTED_PRODUCT_BUTTON_TEXT)

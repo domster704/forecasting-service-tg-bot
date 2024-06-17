@@ -1,6 +1,6 @@
 import aiohttp
 
-from config import apiURL, session
+from config import apiURL, session, AsyncSessionDB
 from db.db import User
 
 
@@ -28,8 +28,9 @@ async def logout(chat_id: int) -> bool:
 
 
 async def getUser(chat_id: int) -> User:
-    user: User = await session.get(User, chat_id)
-    return user
+    async with AsyncSessionDB() as session:
+        user: User = await session.get(User, chat_id)
+        return user
 
 
 async def getUserCookies(chat_id: int) -> dict[str, str]:
