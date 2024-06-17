@@ -43,7 +43,7 @@ class AuthorizationCheckMiddleware(BaseMiddleware):
                 raise PermissionError(PERMISSION_AUTH_ERROR_TEXT)
 
             async with aiohttp.ClientSession(cookies={"refresh_token": user.refresh_token}) as session:
-                async with session.post(f"{apiURL}/api/auth/refresh") as response:
+                async with session.post(f"{apiURL}/auth/refresh") as response:
                     if response.status != 200:
                         raise PermissionError(PERMISSION_AUTH_ERROR_TEXT)
 

@@ -153,7 +153,7 @@ class AuthorizationCredentialsChecker(object):
     async def checkData(self) -> bool:
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.post(f"{apiURL}/api/auth/login/", json={
+                async with session.post(f"{apiURL}/auth/login/", json={
                     "email": self.__login,
                     "password": self.__password
                 }) as response:

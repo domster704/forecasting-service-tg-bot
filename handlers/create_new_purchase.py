@@ -22,7 +22,7 @@ class CrateNewPurchaseActions:
     async def createNewPurchase(message, purchaseHeader):
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.post(f"{apiURL}/api/user/purchase/", json={
+            async with session.post(f"{apiURL}/user/purchase/", json={
                 "id": purchaseHeader['id'],
                 "user_id": user.id,
                 "lotEntityId": purchaseHeader['lotEntityId'],

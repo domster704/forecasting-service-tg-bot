@@ -23,7 +23,7 @@ class ProductActions:
     @staticmethod
     async def getSuggestedList(message, product_name):
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
-            async with session.get(f"{apiURL}/api/search/catalog", params={
+            async with session.get(f"{apiURL}/search/catalog", params={
                 "prompt": product_name
             }) as r:
                 return (await r.json())[product_name]
@@ -32,13 +32,13 @@ class ProductActions:
     async def pickProduct(message, product_name: str) -> int:
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
-            async with session.post(f"{apiURL}/api/search/set_user_pick", params={
+            async with session.post(f"{apiURL}/search/set_user_pick", params={
                 "user_pick ": product_name
             }) as r:
                 pass
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{apiURL_ML}/api/v1/ml/matching/set_user_pick/", params={
+            async with session.post(f"{apiURL_ML}/v1/ml/matching/set_user_pick/", params={
                 "user_id": user.db_id,
                 "user_pick ": product_name
             }) as r:
@@ -47,7 +47,7 @@ class ProductActions:
     @staticmethod
     async def checkRegular(message, product_name: str) -> bool:
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
-            async with session.get(f"{apiURL}/api/search/regular", params={
+            async with session.get(f"{apiURL}/search/regular", params={
                 "user_pick": product_name
             }) as r:
                 if r.status == 200:
@@ -58,7 +58,7 @@ class ProductActions:
     @staticmethod
     async def suggestPrice(message, period, type) -> bytes:
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
-            async with session.get(f"{apiURL}/api/search/purchase_stats", params={
+            async with session.get(f"{apiURL}/search/purchase_stats", params={
                 "period": period,
                 "summa": str(type)
             }) as r:

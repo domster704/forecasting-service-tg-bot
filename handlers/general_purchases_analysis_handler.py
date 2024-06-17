@@ -24,7 +24,7 @@ class GeneralPurchaseAnalysis(object):
     async def allStatistics(message: Message, period, price):
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.get(f"{apiURL_ML}/api/v1/ml/analytics_all/purchase_stats", params={
+            async with session.get(f"{apiURL_ML}/v1/ml/analytics_all/purchase_stats", params={
                 "period": period,
                 "summa": str(price),
             }) as r:
@@ -39,7 +39,7 @@ class GeneralPurchaseAnalysis(object):
     async def allHistoryAnalysis(message: Message):
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.get(f"{apiURL_ML}/api/v1/ml/analytics_all/history", params={
+            async with session.get(f"{apiURL_ML}/v1/ml/analytics_all/history", params={
                 "n": 15,
             }) as r:
                 res = await r.json()

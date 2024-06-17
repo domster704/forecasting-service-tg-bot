@@ -14,7 +14,7 @@ async def logout(chat_id: int) -> bool:
         user: User = await getUser(chat_id)
 
         async with aiohttp.ClientSession(cookies=user.cookies) as sessionApi:
-            async with sessionApi.get(f'{apiURL}/api/auth/logout') as resp:
+            async with sessionApi.get(f'{apiURL}/auth/logout') as resp:
                 if resp.status != 200:
                     return False
 

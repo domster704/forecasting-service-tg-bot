@@ -23,7 +23,7 @@ class ProductAnalysisActions(object):
     @staticmethod
     async def debitCredit(message, credit: bool) -> bytes:
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
-            async with session.get(f"{apiURL}/api/search/debit_credit_info", params={
+            async with session.get(f"{apiURL}/search/debit_credit_info", params={
                 "credit": str(credit)
             }) as r:
                 res = await r.json()
@@ -37,7 +37,7 @@ class ProductAnalysisActions(object):
     async def pickProduct(message, product_name: str):
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.post(f"{apiURL}/api/search/set_user_pick", params={
+            async with session.post(f"{apiURL}/search/set_user_pick", params={
                 "user_pick": product_name,
                 "user_id": user.db_id
             }) as r:
@@ -47,7 +47,7 @@ class ProductAnalysisActions(object):
     async def lastNPurchase(message, n) -> bytes:
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.get(f"{apiURL_ML}/api/v1/ml/analytics/history", params={
+            async with session.get(f"{apiURL_ML}/v1/ml/analytics/history", params={
                 "user_id": user.db_id,
                 "n": str(n),
             }) as r:
@@ -58,7 +58,7 @@ class ProductAnalysisActions(object):
     async def statisticPurchase(message, period, price: bool) -> bytes:
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.get(f"{apiURL_ML}/api/v1/ml/analytics/purchase_stats", params={
+            async with session.get(f"{apiURL_ML}/v1/ml/analytics/purchase_stats", params={
                 "period": period,
                 "user_id": user.db_id,
                 "summa": str(price),
@@ -70,7 +70,7 @@ class ProductAnalysisActions(object):
     async def remainsProduct(message) -> bytes:
         user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=user.cookies) as session:
-            async with session.get(f"{apiURL_ML}/api/v1/ml/analytics/leftover_info", params={
+            async with session.get(f"{apiURL_ML}/v1/ml/analytics/leftover_info", params={
                 "user_id": user.db_id,
             }) as r:
                 res = await r.json()
