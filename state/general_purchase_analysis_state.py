@@ -10,3 +10,5 @@ class CommonPurchaseAnalysisState(StatesGroup):
     expensivePurchase = State()
     choosePeriod = State()
     chooseStatisticType = State()
+
+    enterN = State()

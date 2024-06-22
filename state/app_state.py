@@ -11,7 +11,7 @@ class AppState(StatesGroup):
 
     createNewPurchase = State()  # шаг создания новой закупки
 
-    actionList = State()  # шаг общего списка действий
+    generalActionsState = State()  # шаг общего списка действий
     product = State()  # шаг создания закупки
     commonPurchaseAnalysis = State()  # шаг общего анализа закупки
     balanceState = State()  # шаг баланса

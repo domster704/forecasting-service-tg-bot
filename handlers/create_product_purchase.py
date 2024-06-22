@@ -75,15 +75,9 @@ async def deliveryConditions(message: Message, state: FSMContext) -> None:
     }
     purchaseId = (await state.get_data())['active_purchase']
 
+    user: User = await getUser(message.chat.id)
     async with AsyncSessionDB() as session:
-        user: User = await getUser(message.chat.id)
         await user.putProduct(productData, purchaseId, session)
-    # user: User = await getUser(message.chat.id)
-    # print(user.purchases)
-    # user.putProduct(productData, purchaseId)
-    # print(user.purchases)
-    # await session.commit()
-    # print(user.purchases)
 
     await message.answer(text=ADDING_SUCCESS)
     await productActionsInit(message, state)

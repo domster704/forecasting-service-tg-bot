@@ -90,6 +90,7 @@ class User(Base):
     async def createPurchase(self, json: dict[str, str], session: AsyncSession):
         """Создание закупки"""
 
+        # TODO: В rows по умолчанию вставить PRODUCT_JSON_EXAMPLE, если rows пустой
         self.purchases[json['id']] = {
             'id': json['id'],
             'lotEntityId': json['lotEntityId'],
@@ -120,16 +121,22 @@ class User(Base):
     def getAllProducts(self, purchase_id: str) -> list[str]:
         return [row['entityId'] for row in self.purchases[purchase_id]['rows']]
 
-    def deletePurchase(self, id: str):
+    async def deletePurchase(self, id: str, session: AsyncSession):
         """Удаление закупки"""
         if self.purchases is None or id not in self.purchases.keys():
             return
-        self.purchases.pop(id)
+        purchase = self.purchases.copy()
+        purchase.pop(id)
+        self.purchases = purchase
+
+        session.add(self)
+        await session.commit()
 
     async def setCookies(self, cookies: SimpleCookie, session: AsyncSession):
         """"Установка cookies"""
         self.access_token = cookies.get('access_token').value
         self.refresh_token = cookies.get('refresh_token').value
+
         session.add(self)
         await session.commit()
 

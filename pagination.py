@@ -30,6 +30,7 @@ class Pagination(object):
         будет {self.CALLBACK_DATA_START_NEXT}{self.callback_data_end} и
         {self.CALLBACK_DATA_START_PREV}{self.callback_data_end} соответственно callback_data.
         По умолчанию будет callback_data_end - пустая строка.
+        По умолчанию используются функции pagination.py:nextPageProduct и pagination.py:prevPageProduct
         """
         self.items: list = items
         self.__max_items_per_page: int = max_items_per_page

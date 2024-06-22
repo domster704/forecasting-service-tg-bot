@@ -1,3 +1,4 @@
+import traceback
 from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
@@ -12,8 +13,7 @@ from res.general_text import PERMISSION_RIGHTS_ERROR_TEXT, SOMETHING_WRONG
 
 
 class RightsCheckMiddleware(BaseMiddleware):
-    def __init__(self, session: Session, storage: MemoryStorage):
-        self.session: Session = session
+    def __init__(self, storage: MemoryStorage):
         self.storage: MemoryStorage = storage
 
     async def __call__(
@@ -38,8 +38,7 @@ class RightsCheckMiddleware(BaseMiddleware):
 
             return await handler(event, data)
         except PermissionError as pe:
-            print(pe)
             return await event.answer(PERMISSION_RIGHTS_ERROR_TEXT)
         except Exception as e:
-            print(e)
+            traceback.print_exception(e)
             return await event.answer(SOMETHING_WRONG)

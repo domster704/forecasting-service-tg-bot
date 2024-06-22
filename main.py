@@ -4,13 +4,13 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, BufferedInputFile
 
-from config import dp, bot, stateStorage, session
+from config import dp, bot, stateStorage, AsyncSessionDB
 from db.db import User
-from handlers.actions_list_handler import actionListRouter
+from handlers.general_actions import generalActionsRouter
 from handlers.back_handler import backRouter
 from handlers.balance_handler import balanceRouter
 from handlers.choose_purchase import choosePurchaseRouter
-from handlers.create_new_purchase import creteNewPurchaseRouter
+from handlers.create_new_purchase import cretePurchaseRouter
 from handlers.create_product_purchase import createPurchaseRouter
 from handlers.general_purchases_analysis_handler import commonPurchasesAnalysisRouter
 from handlers.info_handler import infoRouter
@@ -36,13 +36,14 @@ async def startBot(message: Message, state: FSMContext) -> None:
     await state.set_state(AppState.login)
     print(message.chat.id)
 
-    if await session.get(User, message.chat.id) is None:
-        with open('res/img/hello.jpg', 'rb') as photo:
-            result: Message = await bot.send_photo(message.chat.id,
-                                                   photo=BufferedInputFile(photo.read(), filename="test.png"),
-                                                   caption=BOT_HELLO_MESSAGE,
-                                                   reply_markup=ReplyKeyboardRemove()
-                                                   )
+    async with AsyncSessionDB() as session:
+        if await session.get(User, message.chat.id) is None:
+            with open('res/img/hello.jpg', 'rb') as photo:
+                result: Message = await bot.send_photo(message.chat.id,
+                                                       photo=BufferedInputFile(photo.read(), filename="hello.png"),
+                                                       caption=BOT_HELLO_MESSAGE,
+                                                       reply_markup=ReplyKeyboardRemove()
+                                                       )
 
     await loginHandlerInit(message=message, state=state)
 
@@ -50,7 +51,7 @@ async def startBot(message: Message, state: FSMContext) -> None:
 if __name__ == "__main__":
     routerListForAuthRequired = [
         infoRouter,
-        actionListRouter,
+        generalActionsRouter,
         commonPurchasesAnalysisRouter,
         balanceRouter,
         productRouter,
@@ -58,17 +59,16 @@ if __name__ == "__main__":
         createPurchaseRouter,
         choosePurchaseRouter,
         paginationRouter,
-        creteNewPurchaseRouter,
+        cretePurchaseRouter,
         backRouter,
     ]
     for router in routerListForAuthRequired:
         # Устанавливаем middleware для проверки авторизации к роутерам
         router.message.middleware(AuthorizationCheckMiddleware(
-            session=session,
             storage=stateStorage
         ))
+        # Устанавливаем middleware для проверки прав
         router.message.middleware(RightsCheckMiddleware(
-            session=session,
             storage=stateStorage
         ))
 

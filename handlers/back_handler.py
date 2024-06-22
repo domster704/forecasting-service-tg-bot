@@ -7,11 +7,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message
 
-from handlers.actions_list_handler import actionListHandlerInit
-from handlers.choose_purchase import choosePurchaseInit, choosePurchaseActionList
+from handlers.choose_purchase import choosePurchaseInit
+from handlers.general_actions import actionListHandlerInit
 from handlers.general_purchases_analysis_handler import commonPurchaseAnalysisInit
 from handlers.info_handler import infoHandlerInit
 from handlers.product_handler import productInit, productActionsInit, enterProductName
+from res.general_purchases_analysis_text import TOP_EXPENSIVE_BUTTON_TEXT
 from res.general_text import BACK_BUTTON_TEXT
 from state.app_state import AppState
 from state.choose_purchase_state import ChoosePurchaseState
@@ -39,7 +40,7 @@ async def backActionUserInfo(message: Message, state: FSMContext) -> None:
     await infoHandlerInit(message, state)
 
 
-@backRouter.message(AppState.actionList, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(AppState.generalActionsState, F.text == BACK_BUTTON_TEXT)
 async def backButtonActionList(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Список основных действий>
@@ -59,7 +60,7 @@ async def backButtonGeneralPurchaseAnalysis(message: Message, state: FSMContext)
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await actionListHandlerInit(message, state)
 
 
@@ -71,7 +72,7 @@ async def backButtonBalance(message: Message, state: FSMContext) -> None:
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await actionListHandlerInit(message, state)
 
 
@@ -83,7 +84,7 @@ async def backButtonProductName(message: Message, state: FSMContext) -> None:
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await actionListHandlerInit(message, state)
 
 
@@ -171,7 +172,7 @@ async def backButtonActivePurchase(message: Message, state: FSMContext) -> None:
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await actionListHandlerInit(message, state)
 
 
@@ -183,7 +184,7 @@ async def backButtonEditActivePurchase(message: Message, state: FSMContext) -> N
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await choosePurchaseInit(message, state)
 
 
@@ -198,7 +199,7 @@ async def backButtonCreateNewPurchase(message: Message, state: FSMContext) -> No
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await actionListHandlerInit(message, state)
 
 
@@ -216,7 +217,7 @@ async def backButtonAddingProductToPurchase(message: Message, state: FSMContext)
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await productActionsInit(message, state)
 
 
@@ -228,7 +229,7 @@ async def backButtonCommonPurchaseAnalysis(message: Message, state: FSMContext) 
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await commonPurchaseAnalysisInit(message, state)
 
 
@@ -241,7 +242,7 @@ async def backButtonEditPurchase(message: Message, state: FSMContext) -> None:
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await choosePurchaseInit(message, state)
 
 
@@ -253,7 +254,7 @@ async def backButtonProductStatistics(message: Message, state: FSMContext) -> No
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
     await productActionsInit(message, state)
 
 
@@ -265,5 +266,18 @@ async def backButtonProductStatistics(message: Message, state: FSMContext) -> No
     :param state:
     :return:
     """
-    await state.set_state(AppState.actionList)
+    await state.set_state(AppState.generalActionsState)
+    await commonPurchaseAnalysisInit(message, state)
+
+
+@backRouter.message(CommonPurchaseAnalysisState.enterN)
+@backRouter.message(AppState.commonPurchaseAnalysis, F.text == TOP_EXPENSIVE_BUTTON_TEXT)
+async def backButtonEnterNExpensivePurchases(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Общий анализ>:`выбор типа графика`
+    :param message:
+    :param state:
+    :return:
+    """
+    await state.set_state(AppState.generalActionsState)
     await commonPurchaseAnalysisInit(message, state)

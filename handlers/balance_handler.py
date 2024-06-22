@@ -8,7 +8,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import KeyboardButton, Message
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from res.action_list_text import BALANCE_BUTTON_TEXT
+from res.general_actions_text import BALANCE_BUTTON_TEXT
 from res.balance_text import *
 from res.general_text import *
 from state.app_state import AppState
@@ -19,7 +19,7 @@ balanceRouter = Router()
 
 
 @balanceRouter.message(default_state, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
-@balanceRouter.message(AppState.actionList, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
+@balanceRouter.message(AppState.generalActionsState, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
 @balanceRouter.message(AppState.balanceState, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
 async def balanceInit(message: Message, state: FSMContext) -> None:
     await state.set_state(AppState.balanceState)
@@ -53,7 +53,6 @@ async def editBalanceAccount(message: Message, state: FSMContext) -> None:
 async def editBalanceSum(message: Message, state: FSMContext) -> None:
     accountNumber: str = message.text
     await state.update_data(accountNumber=accountNumber)
-    print(accountNumber)
 
     await state.set_state(BalanceState.editBalance)
     await message.answer(text=INPUT_BALANCE_SUM_MESSAGE_TEXT)
@@ -64,13 +63,10 @@ async def completeEditBalance(message: Message, state: FSMContext) -> None:
     try:
         formattedBalanceSum: str = message.text.replace(",", ".")
         balanceSum: float | str = float(formattedBalanceSum) if isFloat(formattedBalanceSum) else formattedBalanceSum
-        print(balanceSum)
-        await state.update_data(balanceSum=balanceSum)
 
+        await state.update_data(balanceSum=balanceSum)
         await state.set_state(AppState.balanceState)
 
-        print(await state.get_data())
         await balanceInit(message, state)
     except Exception as e:
-        print(e)
         await message.answer(text=SOMETHING_WRONG)

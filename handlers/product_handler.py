@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton, BufferedInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from config import apiURL, bot, apiURL_ML, session
+from config import apiURL, bot
 from db.db import User
 from db.db_utils import getUserCookies, getUser
 from pagination import Pagination
@@ -29,9 +29,7 @@ class ProductActions:
                 return (await r.json())[product_name]
 
     @staticmethod
-    async def pickProduct(message, product_name: str) -> int:
-        user: User = await getUser(message.chat.id)
-        print(user.db_id, product_name)
+    async def pickProduct(message, product_name: str) -> None:
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id), headers={
             'accept': 'application/json',
         }) as session:
@@ -41,7 +39,7 @@ class ProductActions:
                 print(await r.json())
 
     @staticmethod
-    async def checkRegular(message, product_name: str) -> bool:
+    async def checkRegular(message, product_name: str) -> bool | None:
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
             async with session.get(f"{apiURL}/search/regular", params={
                 "user_pick": product_name
@@ -49,14 +47,14 @@ class ProductActions:
                 if r.status == 200:
                     return (await r.json())['is_regular']
 
-                return False
+                return None
 
     @staticmethod
-    async def suggestPrice(message, period, type) -> bytes:
+    async def suggestPrice(message, period, price_amount_type) -> bytes:
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id)) as session:
             async with session.get(f"{apiURL}/search/purchase_stats", params={
                 "period": period,
-                "summa": str(type)
+                "summa": str(price_amount_type)
             }) as r:
                 res = await r.json()
                 if res['state'] != 'Success':
@@ -157,7 +155,6 @@ async def getProductFromList(message: Message, state: FSMContext) -> None:
         await state.set_state(ProductState.productActions)
         await productActionsInit(message, state)
     except Exception as e:
-        print(e)
         await message.reply(text=INPUT_WRONG_INDEX)
 
 
@@ -213,7 +210,7 @@ async def suggestProductYear(message: Message, state: FSMContext) -> None:
 
     price = await ProductActions.suggestPrice(message, period, True)
     amount = await ProductActions.suggestPrice(message, period, False)
-    # with open('res/img/test.png', 'rb') as photo:
+
     await bot.send_photo(message.chat.id,
                          photo=BufferedInputFile(price, filename="price.png"))
     await bot.send_photo(message.chat.id,

@@ -95,7 +95,7 @@ productAnalysisRouter = Router()
                                flags={"rights": "analysis_product"})
 async def productAnalysisInit(message: Message, state: FSMContext) -> None:
     await state.set_state(AppState.productAnalysis)
-    print((await state.get_data())['productName'])
+
     await ProductAnalysisActions.pickProduct(message, (await state.get_data())['productName'])
 
     keyboard = ReplyKeyboardBuilder().row(
