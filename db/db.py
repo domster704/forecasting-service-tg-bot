@@ -1,6 +1,5 @@
 import asyncio
 from http.cookies import SimpleCookie
-from typing import Any
 
 from sqlalchemy import Column, Integer, Boolean, JSON, String
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -75,17 +74,45 @@ class User(Base):
     isAuth = Column(Boolean, nullable=False, default=False)
     purchases = Column("purchases", MutableDict.as_mutable(JSON()), default={})
 
-    access_token = Column(String, nullable=True)
-    refresh_token = Column(String, nullable=True)
+    access_token = Column(String, nullable=True, default="")
+    refresh_token = Column(String, nullable=True, default="")
 
     rights = Column(String, default="")
     type = Column(String, default="")
 
-    def __init__(self, **kw: Any):
-        super().__init__(**kw)
-        self.access_token = ""
-        self.refresh_token = ""
-        self.json = {}
+    balance = Column(Integer, default=0)
+
+    def getAllProducts(self, purchase_id: str) -> list[str]:
+        return [row['entityId'] for row in self.purchases[purchase_id]['rows']]
+
+    def getAllPurchasesWithPrices(self) -> list[list[str | int]]:
+        purchasesList: list[list[str | int]] = []
+        for purchaseName in self.purchases.keys():
+            price: int = 0
+            for row in self.purchases[purchaseName]['rows']:
+                price += int(row['nmc'])
+            purchasesList.append([purchaseName, price])
+
+        return purchasesList
+
+    def getProductInPurchase(self, purchase_id: str, product_id: str) -> dict[str, str] | None:
+        for row in self.purchases[purchase_id]['rows']:
+            if row['entityId'] == product_id:
+                return row
+        return None
+
+    async def setBalance(self, balance: int, session: AsyncSession):
+        self.balance = balance
+        session.add(self)
+        await session.commit()
+
+    async def setCookies(self, cookies: SimpleCookie, session: AsyncSession):
+        """"Установка cookies"""
+        self.access_token = cookies.get('access_token').value
+        self.refresh_token = cookies.get('refresh_token').value
+
+        session.add(self)
+        await session.commit()
 
     async def createPurchase(self, json: dict[str, str], session: AsyncSession):
         """Создание закупки"""
@@ -117,19 +144,14 @@ class User(Base):
         session.add(self)
         await session.commit()
 
-    def getAllProducts(self, purchase_id: str) -> list[str]:
-        return [row['entityId'] for row in self.purchases[purchase_id]['rows']]
-
-    def deletePurchase(self, id: str):
+    async def deletePurchase(self, id: str, session: AsyncSession):
         """Удаление закупки"""
         if self.purchases is None or id not in self.purchases.keys():
             return
-        self.purchases.pop(id)
+        purchase = self.purchases.copy()
+        purchase.pop(id)
+        self.purchases = purchase
 
-    async def setCookies(self, cookies: SimpleCookie, session: AsyncSession):
-        """"Установка cookies"""
-        self.access_token = cookies.get('access_token').value
-        self.refresh_token = cookies.get('refresh_token').value
         session.add(self)
         await session.commit()
 
