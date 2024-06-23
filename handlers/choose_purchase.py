@@ -14,8 +14,8 @@ from db.db import fillProductExample
 from db.db_utils import getUser
 from handlers.general_actions import actionListHandlerInit
 from pagination import Pagination
-from res.general_actions_text import CHOOSE_PURCHASE_BUTTON_TEXT
 from res.choose_purchase_text import *
+from res.general_actions_text import CHOOSE_PURCHASE_BUTTON_TEXT
 from res.general_text import BACK_BUTTON_TEXT, SOMETHING_WRONG
 from state.app_state import AppState
 from state.choose_purchase_state import ChoosePurchaseState
@@ -24,8 +24,8 @@ choosePurchaseRouter = Router()
 
 
 @choosePurchaseRouter.message(AppState.activePurchase, F.text == CHOOSE_PURCHASE_BUTTON_TEXT)
-@choosePurchaseRouter.message(AppState.generalActionsState, F.text == CHOOSE_PURCHASE_BUTTON_TEXT)
-@choosePurchaseRouter.message(ChoosePurchaseState.purchaseList, F.text == CHOOSE_PURCHASE_BUTTON_TEXT)
+@choosePurchaseRouter.message(AppState.generalActions, F.text == CHOOSE_PURCHASE_BUTTON_TEXT)
+@choosePurchaseRouter.message(ChoosePurchaseState.choosePurchase, F.text == CHOOSE_PURCHASE_BUTTON_TEXT)
 async def choosePurchaseInit(message: Message, state: FSMContext) -> None:
     user = await getUser(message.chat.id)
     purchases_list = [key for key, value in user.purchases.items()]
@@ -34,8 +34,6 @@ async def choosePurchaseInit(message: Message, state: FSMContext) -> None:
         await message.answer(text=NO_PURCHASES_TEXT)
         await actionListHandlerInit(message, state)
         return
-
-    await state.set_state(ChoosePurchaseState.purchaseList)
 
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=BACK_BUTTON_TEXT)
@@ -70,7 +68,7 @@ async def choosePurchaseActionList(message: Message, state: FSMContext) -> None:
     await state.set_state(ChoosePurchaseState.chooseActionsFromList)
 
     keyboard = ReplyKeyboardBuilder().row(
-        KeyboardButton(text=EDIT_PURCHASE_BUTTON_TEXT),
+        KeyboardButton(text=PRODUCT_INT_PURCHASE_BUTTON_TEXT),
         KeyboardButton(text=DOWNLOAD_PURCHASE_BUTTON_TEXT),
     ).row(
         KeyboardButton(text=DELETE_PURCHASE_BUTTON_TEXT),
@@ -78,7 +76,6 @@ async def choosePurchaseActionList(message: Message, state: FSMContext) -> None:
     )
 
     active_purchase: str = (await state.get_data())["active_purchase"]
-
     await message.answer(text=CHOOSE_PURCHASE_TEXT(active_purchase),
                          reply_markup=keyboard.as_markup(resize_keyboard=True))
 

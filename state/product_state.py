@@ -28,3 +28,4 @@ class ProductState(StatesGroup):
 
     productStatistic = State()
     productStatisticChoosePeriod = State()
+    productDebitCredit = State()

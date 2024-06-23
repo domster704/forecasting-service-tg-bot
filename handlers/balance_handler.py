@@ -19,10 +19,10 @@ balanceRouter = Router()
 
 
 @balanceRouter.message(default_state, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
-@balanceRouter.message(AppState.generalActionsState, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
-@balanceRouter.message(AppState.balanceState, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
+@balanceRouter.message(AppState.generalActions, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
+@balanceRouter.message(AppState.balance, F.text == BALANCE_BUTTON_TEXT, flags={"rights": "balance"})
 async def balanceInit(message: Message, state: FSMContext) -> None:
-    await state.set_state(AppState.balanceState)
+    await state.set_state(AppState.balance)
 
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=INFO_BALANCE_BUTTON_TEXT),
@@ -36,14 +36,14 @@ async def balanceInit(message: Message, state: FSMContext) -> None:
 
 
 @balanceRouter.message(default_state, F.text == INFO_BALANCE_BUTTON_TEXT)
-@balanceRouter.message(AppState.balanceState, F.text == INFO_BALANCE_BUTTON_TEXT)
+@balanceRouter.message(AppState.balance, F.text == INFO_BALANCE_BUTTON_TEXT)
 async def infoBalance(message: Message, state: FSMContext) -> None:
-    await state.set_state(AppState.balanceState)
+    await state.set_state(AppState.balance)
     await message.answer(text=INFO_BALANCE_MESSAGE_TEXT)
 
 
 @balanceRouter.message(default_state, F.text == EDIT_BALANCE_BUTTON_TEXT)
-@balanceRouter.message(AppState.balanceState, F.text == EDIT_BALANCE_BUTTON_TEXT)
+@balanceRouter.message(AppState.balance, F.text == EDIT_BALANCE_BUTTON_TEXT)
 async def editBalanceAccount(message: Message, state: FSMContext) -> None:
     await state.set_state(BalanceState.editAccount)
     await message.answer(text=INPUT_BALANCE_ACCOUNT_MESSAGE_TEXT)
@@ -65,7 +65,7 @@ async def completeEditBalance(message: Message, state: FSMContext) -> None:
         balanceSum: float | str = float(formattedBalanceSum) if isFloat(formattedBalanceSum) else formattedBalanceSum
 
         await state.update_data(balanceSum=balanceSum)
-        await state.set_state(AppState.balanceState)
+        await state.set_state(AppState.balance)
 
         await balanceInit(message, state)
     except Exception as e:

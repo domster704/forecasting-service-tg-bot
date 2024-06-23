@@ -6,15 +6,16 @@ from aiogram.types import Message, ReplyKeyboardRemove, BufferedInputFile
 
 from config import dp, bot, stateStorage, AsyncSessionDB
 from db.db import User
-from handlers.general_actions import generalActionsRouter
 from handlers.back_handler import backRouter
 from handlers.balance_handler import balanceRouter
 from handlers.choose_purchase import choosePurchaseRouter
 from handlers.create_new_purchase import cretePurchaseRouter
 from handlers.create_product_purchase import createPurchaseRouter
+from handlers.general_actions import generalActionsRouter
 from handlers.general_purchases_analysis_handler import commonPurchasesAnalysisRouter
 from handlers.info_handler import infoRouter
 from handlers.login_handler import loginRouter, loginHandlerInit
+from handlers.product_actions import productActionsRouter
 from handlers.product_analysis_handler import productAnalysisRouter
 from handlers.product_handler import productRouter
 from middleware.auth_middleware import AuthorizationCheckMiddleware
@@ -60,6 +61,7 @@ if __name__ == "__main__":
         choosePurchaseRouter,
         paginationRouter,
         cretePurchaseRouter,
+        productActionsRouter,
         backRouter,
     ]
     for router in routerListForAuthRequired:

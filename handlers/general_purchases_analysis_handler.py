@@ -55,7 +55,7 @@ commonPurchasesAnalysisRouter = Router()
 
 @commonPurchasesAnalysisRouter.message(default_state, F.text == COMMON_ANALYSIS_BUTTON_TEXT,
                                        flags={"rights": "analysis_common"})
-@commonPurchasesAnalysisRouter.message(AppState.generalActionsState, F.text == COMMON_ANALYSIS_BUTTON_TEXT,
+@commonPurchasesAnalysisRouter.message(AppState.generalActions, F.text == COMMON_ANALYSIS_BUTTON_TEXT,
                                        flags={"rights": "analysis_common"})
 @commonPurchasesAnalysisRouter.message(AppState.commonPurchaseAnalysis, F.text == COMMON_ANALYSIS_BUTTON_TEXT,
                                        flags={"rights": "analysis_common"})
@@ -107,7 +107,7 @@ async def suggestProduct(message: Message, state: FSMContext) -> None:
     )
 
     await state.set_state(CommonPurchaseAnalysisState.choosePeriod)
-    await message.answer(text=CHOSE_PERIOD_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
+    await message.answer(text=CHOSE_STATISTIC_PERIOD_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
 @commonPurchasesAnalysisRouter.message(CommonPurchaseAnalysisState.choosePeriod, F.text == YEAR_TEXT)
@@ -132,7 +132,7 @@ async def suggestProductYear(message: Message, state: FSMContext) -> None:
         period = 3
 
     await state.update_data(allPurchaseAnalysis_period=period)
-    await message.answer(text=CHOSE_TYPE_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
+    await message.answer(text=GENERAL_STATISTIC_CHOSE_TYPE_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
 @commonPurchasesAnalysisRouter.message(CommonPurchaseAnalysisState.chooseStatisticType,
@@ -142,7 +142,8 @@ async def suggestProductYear(message: Message, state: FSMContext) -> None:
     allStatisticsAmount = await GeneralPurchaseAnalysis.allStatistics(message, period, False)
 
     await bot.send_photo(message.chat.id,
-                         photo=BufferedInputFile(allStatisticsAmount, filename="amount.png"))
+                         photo=BufferedInputFile(allStatisticsAmount, filename="amount.png"),
+                         caption=PURCHASES_STATISTIC_AMOUNT_TEXT)
 
 
 @commonPurchasesAnalysisRouter.message(CommonPurchaseAnalysisState.chooseStatisticType,
@@ -152,4 +153,5 @@ async def suggestProductYear(message: Message, state: FSMContext) -> None:
     allStatisticsPrice = await GeneralPurchaseAnalysis.allStatistics(message, period, True)
 
     await bot.send_photo(message.chat.id,
-                         photo=BufferedInputFile(allStatisticsPrice, filename="price.png"))
+                         photo=BufferedInputFile(allStatisticsPrice, filename="price.png"),
+                         caption=PURCHASES_STATISTIC_PRICE_TEXT)

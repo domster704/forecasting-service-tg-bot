@@ -37,6 +37,7 @@ async def loginHandlerInit(message: types.Message, state: FSMContext) -> None:
     """
     user: User = await getUser(message.chat.id)
     if user is not None and user.access_token is not None:
+        print(user.db_id)
         await goToInfoHandler(message, state)
         return
 

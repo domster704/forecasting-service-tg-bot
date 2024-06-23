@@ -34,12 +34,12 @@ class CrateNewPurchaseActions:
 cretePurchaseRouter = Router()
 
 
-@cretePurchaseRouter.message(AppState.generalActionsState, F.text == CREATE_PURCHASE_BUTTON_TEXT,
+@cretePurchaseRouter.message(AppState.generalActions, F.text == CREATE_PURCHASE_BUTTON_TEXT,
                              flags={"rights": "create_purchase"})
-@cretePurchaseRouter.message(AppState.createNewPurchase, F.text == CREATE_PURCHASE_BUTTON_TEXT,
+@cretePurchaseRouter.message(AppState.createPurchase, F.text == CREATE_PURCHASE_BUTTON_TEXT,
                              flags={"rights": "create_purchase"})
 async def createNewPurchaseInit(message: Message, state: FSMContext) -> None:
-    await state.set_state(AppState.createNewPurchase)
+    await state.set_state(AppState.createPurchase)
 
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=BACK_BUTTON_TEXT)

@@ -17,9 +17,9 @@ generalActionsRouter = Router()
 
 @generalActionsRouter.message(default_state, F.text == CONTINUE_BUTTON_TEXT)
 @generalActionsRouter.message(AppState.info, F.text == CONTINUE_BUTTON_TEXT)
-@generalActionsRouter.message(AppState.generalActionsState, F.text == CONTINUE_BUTTON_TEXT)
+@generalActionsRouter.message(AppState.generalActions, F.text == CONTINUE_BUTTON_TEXT)
 async def actionListHandlerInit(message: Message, state: FSMContext) -> None:
-    await state.set_state(AppState.generalActionsState)
+    await state.set_state(AppState.generalActions)
 
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=CHOOSE_PURCHASE_BUTTON_TEXT),
