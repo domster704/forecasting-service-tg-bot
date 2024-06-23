@@ -7,12 +7,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message
 
-from handlers.choose_purchase import choosePurchaseInit
+from handlers.choose_purchase import choosePurchaseInit, choosePurchaseActionList
+from handlers.create_product_purchase import purchaseProductInit
 from handlers.general_actions import actionListHandlerInit
 from handlers.general_purchases_analysis_handler import commonPurchaseAnalysisInit
 from handlers.info_handler import infoHandlerInit
-from handlers.product_actions import productActionsInit
-from handlers.product_analysis_handler import productAnalysisInit
+from handlers.product_actions import productActionsInit, predictProduct
+from handlers.product_analysis_handler import productAnalysisInit, productStatistic
 from handlers.product_handler import productInit
 from res.general_purchases_analysis_text import TOP_EXPENSIVE_BUTTON_TEXT
 from res.general_text import *
@@ -68,7 +69,7 @@ async def backButtonProductName(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Товар>:`ввод имени товара`
     """
-    await actionListHandlerInit(message, state)
+    await productInit(message, state)
 
 
 @backRouter.message(ProductState.productNameSuggestedList, F.text == BACK_BUTTON_TEXT)
@@ -89,7 +90,7 @@ async def backButtonProductActions(message: Message, state: FSMContext) -> None:
     await productInit(message, state)
 
 
-@backRouter.message(ProductState.choosePeriod, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(ProductState.predictChoosePeriod, F.text == BACK_BUTTON_TEXT)
 async def backButtonProductPrediction(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Прогнозирование товара>
@@ -97,20 +98,17 @@ async def backButtonProductPrediction(message: Message, state: FSMContext) -> No
     await productActionsInit(message, state)
 
 
-# @backRouter.message(ProductState.productNameSuggestedList, F.text == BACK_BUTTON_TEXT)
-# async def backButtonSuggestedList(message: Message, state: FSMContext) -> None:
-#     """
-#     Кнопка назад в блоке <Товар>:`список действий с товаром`
-#     :param message:
-#     :param state:
-#     :return:
-#     """
-#     await state.set_state(ProductState.productName)
-#     await enterProductName(message, state)
+@backRouter.message(ProductState.predictChooseType, F.text == BACK_BUTTON_TEXT)
+async def backButtonProductPrediction(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Прогнозирование товара>:`Выбор типа прогнозирования`
+    """
+    await predictProduct(message, state)
 
 
 @backRouter.message(ProductState.productStatistic, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(ProductState.productDebitCredit, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(ProductState.enterLastNProducts, F.text == BACK_BUTTON_TEXT)
 async def backButtonProductAnalysis(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Аналитика по товару>
@@ -119,11 +117,11 @@ async def backButtonProductAnalysis(message: Message, state: FSMContext) -> None
 
 
 @backRouter.message(ProductState.productStatisticChoosePeriod, F.text == BACK_BUTTON_TEXT)
-async def productStatistic(message: Message, state: FSMContext) -> None:
+async def backButtonProductAnalysis(message: Message, state: FSMContext) -> None:
     """
-    Кнопка назад в блоке <Статистика по товару>
+    Кнопка назад в блоке <Статистика по товару>:`выбор типа статистики`
     """
-    await productAnalysisInit(message, state)
+    await productStatistic(message, state)
 
 
 @backRouter.message(ProductState.waitPurchaseActions, F.text == BACK_BUTTON_TEXT)
@@ -165,6 +163,7 @@ async def backButtonCreateNewPurchase(message: Message, state: FSMContext) -> No
 
 
 @backRouter.message(AppState.createPurchase, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(AddProductToPurchase.initAdding, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(AddProductToPurchase.purchaseAmount, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(AddProductToPurchase.nmc, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(AddProductToPurchase.dateStart, F.text == BACK_BUTTON_TEXT)
@@ -174,7 +173,15 @@ async def backButtonCreateNewPurchase(message: Message, state: FSMContext) -> No
 @backRouter.message(AppState.productAnalysis, F.text == BACK_BUTTON_TEXT)
 async def backButtonAddingProductToPurchase(message: Message, state: FSMContext) -> None:
     """
-    Кнопка назад в блоке <Добавление товара в активную/текущую закупку>
+    Кнопка назад в блоке <Добавление товара в активную/текущую закупку>:`Изменение параметров товара`
+    """
+    await purchaseProductInit(message, state)
+
+
+@backRouter.message(AddProductToPurchase.chooseAction, F.text == BACK_BUTTON_TEXT)
+async def backButtonAddingProductToPurchase(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Добавление товара в активную/текущую закупку>:`Выбор действия`
     """
     await productActionsInit(message, state)
 
@@ -188,13 +195,21 @@ async def backButtonCommonPurchaseAnalysis(message: Message, state: FSMContext) 
 
 
 @backRouter.message(ChoosePurchaseState.chooseActionsFromList, F.text == BACK_BUTTON_TEXT)
-@backRouter.message(ProductState.initActions, F.text == BACK_BUTTON_TEXT)
 async def backButtonEditPurchase(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Редактирование закупки>
     """
     await state.set_state(AppState.generalActions)
     await choosePurchaseInit(message, state)
+
+
+@backRouter.message(ProductState.initActions, F.text == BACK_BUTTON_TEXT)
+async def backButtonEditPurchase(message: Message, state: FSMContext) -> None:
+    """
+    Кнопка назад в блоке <Товар>
+    """
+    await state.set_state(AppState.generalActions)
+    await choosePurchaseActionList(message, state)
 
 
 @backRouter.message(CommonPurchaseAnalysisState.chooseStatisticType, F.text == BACK_BUTTON_TEXT)

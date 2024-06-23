@@ -10,7 +10,7 @@ from aiogram.types import Message, KeyboardButton, BufferedInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from config import AsyncSessionDB
-from db.db import fillProductExample
+from db.db import fillProductExample, PRODUCT_JSON_EXAMPLE
 from db.db_utils import getUser
 from handlers.general_actions import actionListHandlerInit
 from pagination import Pagination
@@ -85,8 +85,11 @@ async def downloadActivePurchase(message: Message, state: FSMContext) -> None:
     user = await getUser(message.chat.id)
 
     purchases: dict = user.purchases[(await state.get_data())["active_purchase"]].copy()
-    for i in range(len(purchases['rows'])):
-        purchases['rows'][i] = fillProductExample(purchases['rows'][i])
+    if len(purchases['rows']) == 0:
+        purchases['rows'] = [PRODUCT_JSON_EXAMPLE]
+    else:
+        for i in range(len(purchases['rows'])):
+            purchases['rows'][i] = fillProductExample(purchases['rows'][i])
     bytes_data = json.dumps(purchases, ensure_ascii=False).encode('utf-8')
 
     with io.BytesIO(bytes_data) as jsonFile:

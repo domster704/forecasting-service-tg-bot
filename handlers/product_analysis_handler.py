@@ -101,7 +101,7 @@ async def productAnalysisInit(message: Message, state: FSMContext) -> None:
 
 @productAnalysisRouter.message(AppState.productAnalysis, F.text == HOW_MANY_ITEMS_LEFT_BUTTON_TEXT)
 async def howManyItemsLeft(message: Message, state: FSMContext) -> None:
-    productName: str = (await state.get_data())['productName']
+    productName: str = (await state.get_data())['product_name']
     remainsProduct = await ProductAnalysisActions.remainsProduct(message)
 
     if remainsProduct == b'':
@@ -113,7 +113,31 @@ async def howManyItemsLeft(message: Message, state: FSMContext) -> None:
 
 
 @productAnalysisRouter.message(AppState.productAnalysis, F.text == LAST_N_PURCHASE_BUTTON_TEXT)
+async def lastNPurchaseEnterN(message: Message, state: FSMContext) -> None:
+    await state.set_state(ProductState.enterLastNProducts)
+
+    keyboard = ReplyKeyboardBuilder().add(
+        KeyboardButton(text=BACK_BUTTON_TEXT)
+    )
+
+    await message.answer(text=ENTER_LAST_N_PRODUCT_MESSAGE_TEXT,
+                         reply_markup=keyboard.as_markup(resize_keyboard=True))
+
+
+@productAnalysisRouter.message(ProductState.enterLastNProducts, F.text != BACK_BUTTON_TEXT)
 async def lastNPurchase(message: Message, state: FSMContext) -> None:
+    try:
+        n: int = int(message.text)
+        lastNPurchase = await ProductAnalysisActions.lastNPurchase(message, n)
+        await bot.send_document(message.chat.id,
+                                document=BufferedInputFile(lastNPurchase, filename=f"last{n}.xlsx"))
+    except Exception as e:
+        await message.answer(text=SOMETHING_WRONG)
+
+
+@productAnalysisRouter.message(AppState.productAnalysis, F.text == LAST_N_PURCHASE_BUTTON_TEXT)
+async def lastNPurchaseEnterN(message: Message, state: FSMContext) -> None:
+    await state.set_state(ProductState.enterLastNProducts)
     lastNPurchase = await ProductAnalysisActions.lastNPurchase(message, 5)
 
     await bot.send_document(message.chat.id,
@@ -143,7 +167,8 @@ async def debit(message: Message, state: FSMContext) -> None:
         return
 
     await bot.send_photo(message.chat.id,
-                         photo=BufferedInputFile(price, filename="price.png"))
+                         photo=BufferedInputFile(price, filename="price.png"),
+                         caption=PRICE_DEBIT_CREDIT_PRODUCT_MESSAGE_TEXT)
 
 
 @productAnalysisRouter.message(ProductState.productDebitCredit, F.text == AMOUNT_BUTTON_TEXT)
@@ -155,7 +180,8 @@ async def credit(message: Message, state: FSMContext) -> None:
         return
 
     await bot.send_photo(message.chat.id,
-                         photo=BufferedInputFile(amount, filename="amount.png"))
+                         photo=BufferedInputFile(amount, filename="amount.png"),
+                         caption=AMOUNT_DEBIT_CREDIT_PRODUCT_MESSAGE_TEXT)
 
 
 @productAnalysisRouter.message(AppState.productAnalysis, F.text == STATISTIC_BUTTON_TEXT)
@@ -169,7 +195,7 @@ async def productStatistic(message: Message, state: FSMContext) -> None:
     )
 
     await state.set_state(ProductState.productStatistic)
-    await message.answer(text=CHOSE_PERIOD_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
+    await message.answer(text=STATISTIC_PRODUCT_PERIOD_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
 @productAnalysisRouter.message(ProductState.productStatistic, F.text == YEAR_TEXT)
@@ -195,7 +221,7 @@ async def suggestProductYear(message: Message, state: FSMContext) -> None:
 
     await state.update_data(productStatisticPeriod=period)
 
-    await message.answer(text="Выберите сумму/количество",
+    await message.answer(text=STATISTIC_PRODUCT_TYPE_TEXT,
                          reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
@@ -209,7 +235,8 @@ async def amountStatistic(message: Message, state: FSMContext) -> None:
         return
 
     await bot.send_photo(message.chat.id,
-                         photo=BufferedInputFile(statisticPurchaseAmount, filename="amount.png"))
+                         photo=BufferedInputFile(statisticPurchaseAmount, filename="amount.png"),
+                         caption=AMOUNT_STATISTIC_PRODUCT_MESSAGE_TEXT)
 
 
 @productAnalysisRouter.message(ProductState.productStatisticChoosePeriod, F.text == PRICE_OF_PURCHASES_BUTTON_TEXT)
@@ -222,4 +249,5 @@ async def priceStatistic(message: Message, state: FSMContext) -> None:
         return
 
     await bot.send_photo(message.chat.id,
-                         photo=BufferedInputFile(statisticPurchasePrice, filename="amount.png"))
+                         photo=BufferedInputFile(statisticPurchasePrice, filename="amount.png"),
+                         caption=PRICE_STATISTIC_PRODUCT_MESSAGE_TEXT)

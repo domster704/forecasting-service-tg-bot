@@ -9,7 +9,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from config import apiURL, bot
 from db.db_utils import getUserCookies
-from res.general_text import *
+from res.product_analysis_text import AMOUNT_BUTTON_TEXT, PRICE_BUTTON_TEXT
 from res.product_text import *
 from state.product_state import ProductState
 from utils import base64ToBufferInputStream
@@ -52,10 +52,8 @@ async def productActionsInit(message: Message, state: FSMContext) -> None:
 
     stateData = await state.get_data()
 
-    productName: str = stateData["productName"]
-    regularity: bool = stateData['regularity'] \
-        if 'regularity' in stateData.keys() \
-        else await ProductActions.checkRegular(message, productName)
+    productName: str = stateData["product_name"]
+    regularity: bool = await ProductActions.checkRegular(message, productName)
 
     keyboard = ReplyKeyboardBuilder()
     first_row = [KeyboardButton(text=ANALYZE_PRODUCT_BUTTON_TEXT),
@@ -86,15 +84,15 @@ async def predictProduct(message: Message, state: FSMContext) -> None:
         KeyboardButton(text=BACK_BUTTON_TEXT)
     )
 
-    await state.set_state(ProductState.choosePeriod)
-    await message.answer(text=CHOSE_PERIOD_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
+    await state.set_state(ProductState.predictChoosePeriod)
+    await message.answer(text=PREDICT_PRODUCT_PERIOD_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
-@productActionsRouter.message(ProductState.choosePeriod, F.text == YEAR_TEXT)
-@productActionsRouter.message(ProductState.choosePeriod, F.text == QUARTER_TEXT)
-@productActionsRouter.message(ProductState.choosePeriod, F.text == MONTH_TEXT)
+@productActionsRouter.message(ProductState.predictChoosePeriod, F.text == YEAR_TEXT)
+@productActionsRouter.message(ProductState.predictChoosePeriod, F.text == QUARTER_TEXT)
+@productActionsRouter.message(ProductState.predictChoosePeriod, F.text == MONTH_TEXT)
 async def predictProductByPeriod(message: Message, state: FSMContext) -> None:
-    await message.answer(text=SELECT_PERIOD_TEXT(message.text))
+    await state.set_state(ProductState.predictChooseType)
 
     period: int = 1
     if message.text == YEAR_TEXT:
@@ -104,10 +102,32 @@ async def predictProductByPeriod(message: Message, state: FSMContext) -> None:
     elif message.text == MONTH_TEXT:
         period = 3
 
+    await state.update_data(period=period)
+
+    keyboard = ReplyKeyboardBuilder().row(
+        KeyboardButton(text=AMOUNT_BUTTON_TEXT),
+        KeyboardButton(text=PRICE_BUTTON_TEXT),
+    ).row(
+        KeyboardButton(text=BACK_BUTTON_TEXT)
+    )
+
+    await message.answer(text=SELECT_PERIOD_TEXT(message.text),
+                         reply_markup=keyboard.as_markup(resize_keyboard=True))
+
+
+@productActionsRouter.message(ProductState.predictChooseType, F.text == PRICE_BUTTON_TEXT)
+async def predictProductByPrice(message: Message, state: FSMContext) -> None:
+    period: int = (await state.get_data())['period']
     price = await ProductActions.suggestPrice(message, period, True)
-    amount = await ProductActions.suggestPrice(message, period, False)
 
     await bot.send_photo(message.chat.id,
                          photo=BufferedInputFile(price, filename="price.png"))
+
+
+@productActionsRouter.message(ProductState.predictChooseType, F.text == AMOUNT_BUTTON_TEXT)
+async def predictProductByAmount(message: Message, state: FSMContext) -> None:
+    period: int = (await state.get_data())['period']
+    amount = await ProductActions.suggestPrice(message, period, False)
+
     await bot.send_photo(message.chat.id,
                          photo=BufferedInputFile(amount, filename="amount.png"))

@@ -1,6 +1,7 @@
 """
 Раздел <Товар>
 """
+import base64
 import traceback
 
 import aiohttp
@@ -9,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from config import apiURL, apiURL_ML
+from config import apiURL, apiURL_ML, bot
 from db.db import User
 from db.db_utils import getUserCookies, getUser
 from handlers.product_actions import productActionsInit
@@ -31,20 +32,11 @@ class ProductActions:
 
     @staticmethod
     async def pickProduct(message, product_name: str) -> None:
-        user: User = await getUser(message.chat.id)
+        # user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id), headers={
             'accept': 'application/json',
         }) as session:
             async with session.post(f"{apiURL}/search/set_user_pick", params={
-                "user_pick": product_name
-            }) as r:
-                print(await r.json())
-
-        async with aiohttp.ClientSession(headers={
-            'accept': 'application/json',
-        }) as session:
-            async with session.post(f"{apiURL_ML}/v1/ml/matching/set_user_pick/", params={
-                "user_id": user.db_id,
                 "user_pick": product_name
             }) as r:
                 print(await r.json())
@@ -97,19 +89,26 @@ async def enterProductNameForShowList(message: Message, state: FSMContext) -> No
     await message.answer(text=PRODUCT_HELLO_TEXT, reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 
-@productRouter.message(ProductState.productName, F.text != BACK_BUTTON_TEXT)
+@productRouter.message(ProductState.productName, F.text, F.text != BACK_BUTTON_TEXT)
 async def enterProductName(message: Message, state: FSMContext) -> None:
     productName: str = message.text
     await state.update_data(productName=productName)
 
     await state.set_state(ProductState.productNameSuggestedList)
-    # keyboard = ReplyKeyboardBuilder().add(
-    #     KeyboardButton(text=BACK_BUTTON_TEXT)
-    # )
-    #
-    # await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
     await showProductNameSuggestedList(message, state,
                                        items=await ProductActions.getSuggestedList(message, productName))
+
+
+@productRouter.message(ProductState.productName, F.content_type == "voice")
+async def enterProductNameByAudio(message: Message, state: FSMContext) -> None:
+    file_id = message.voice.file_id
+    file = await bot.get_file(file_id)
+    file_path = file.file_path
+    binaryIO = await bot.download_file(file_path)
+
+    # Использовать это для отправки по api
+    voiceBase64 = base64.b64encode(binaryIO.read()).decode()
+    print(voiceBase64)
 
 
 @productRouter.message(ProductState.productNameSuggestedList, F.text != BACK_BUTTON_TEXT)
@@ -133,12 +132,14 @@ async def getProductFromList(message: Message, state: FSMContext) -> None:
     try:
         index = int(message.text) - 1
         pagination: Pagination = (await state.get_data())["pagination"]
-        await state.update_data(productName=pagination.items[index])
+        # await state.update_data(productName=pagination.items[index])
+        await state.update_data(product_name=pagination.items[index])
         print(pagination.items[index])
 
         await ProductActions.pickProduct(message, pagination.items[index])
 
-        await message.reply(text=YOU_CHOOSE_THAT_PRODUCT_TEXT(pagination.items[index]), reply_markup=ReplyKeyboardRemove())
+        await message.reply(text=YOU_CHOOSE_THAT_PRODUCT_TEXT(pagination.items[index]),
+                            reply_markup=ReplyKeyboardRemove())
         await state.set_state(ProductState.productActions)
 
         await productActionsInit(message, state)
