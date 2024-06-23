@@ -66,8 +66,7 @@ async def completeEditBalance(message: Message, state: FSMContext) -> None:
 
         async with AsyncSessionDB() as session:
             user: User = await getUser(message.from_user.id)
-            user.setBalance(balanceSum)
-            await session.commit()
+            await user.setBalance(balanceSum, session)
 
         await message.answer(text=SUCCESS_EDIT_BALANCE_TEXT)
         await balanceInit(message, state)
