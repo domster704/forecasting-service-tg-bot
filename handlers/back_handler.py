@@ -170,7 +170,6 @@ async def backButtonCreateNewPurchase(message: Message, state: FSMContext) -> No
 @backRouter.message(AddProductToPurchase.dateEnd, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(AddProductToPurchase.deliveryConditions, F.text == BACK_BUTTON_TEXT)
 @backRouter.message(AddProductToPurchase.entityId, F.text == BACK_BUTTON_TEXT)
-@backRouter.message(AppState.productAnalysis, F.text == BACK_BUTTON_TEXT)
 async def backButtonAddingProductToPurchase(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Добавление товара в активную/текущую закупку>:`Изменение параметров товара`
@@ -179,6 +178,7 @@ async def backButtonAddingProductToPurchase(message: Message, state: FSMContext)
 
 
 @backRouter.message(AddProductToPurchase.chooseAction, F.text == BACK_BUTTON_TEXT)
+@backRouter.message(AppState.productAnalysis, F.text == BACK_BUTTON_TEXT)
 async def backButtonAddingProductToPurchase(message: Message, state: FSMContext) -> None:
     """
     Кнопка назад в блоке <Добавление товара в активную/текущую закупку>:`Выбор действия`
