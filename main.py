@@ -38,7 +38,8 @@ async def startBot(message: Message, state: FSMContext) -> None:
     print(message.chat.id)
 
     async with AsyncSessionDB() as session:
-        if await session.get(User, message.chat.id) is None:
+        user = await session.get(User, message.chat.id)
+        if user is None or user.isAuth is False:
             with open('res/img/hello.jpg', 'rb') as photo:
                 result: Message = await bot.send_photo(message.chat.id,
                                                        photo=BufferedInputFile(photo.read(), filename="hello.png"),

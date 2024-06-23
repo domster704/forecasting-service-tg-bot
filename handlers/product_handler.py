@@ -10,8 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from config import apiURL, apiURL_ML, bot
-from db.db import User
+from config import apiURL, bot
 from db.db_utils import getUserCookies, getUser
 from handlers.product_actions import productActionsInit
 from pagination import Pagination
@@ -19,6 +18,7 @@ from res.choose_purchase_text import PRODUCT_INT_PURCHASE_BUTTON_TEXT
 from res.product_text import *
 from state.choose_purchase_state import ChoosePurchaseState
 from state.product_state import ProductState
+from utils import ApiActions
 
 
 class ProductActions:
@@ -32,7 +32,6 @@ class ProductActions:
 
     @staticmethod
     async def pickProduct(message, product_name: str) -> None:
-        # user: User = await getUser(message.chat.id)
         async with aiohttp.ClientSession(cookies=await getUserCookies(message.chat.id), headers={
             'accept': 'application/json',
         }) as session:
@@ -69,12 +68,6 @@ async def editExistedProduct(message: Message, state: FSMContext) -> None:
         await productInit(message, state)
         return
 
-    # keyboard = ReplyKeyboardBuilder().add(
-    #     KeyboardButton(text=BACK_BUTTON_TEXT)
-    # )
-    #
-    # await message.answer(text=INPUT_PRODUCT_INDEX, reply_markup=keyboard.as_markup(resize_keyboard=True))
-
     await showProductNameSuggestedList(message, state, items=productList)
 
 
@@ -90,8 +83,8 @@ async def enterProductNameForShowList(message: Message, state: FSMContext) -> No
 
 
 @productRouter.message(ProductState.productName, F.text, F.text != BACK_BUTTON_TEXT)
-async def enterProductName(message: Message, state: FSMContext) -> None:
-    productName: str = message.text
+async def enterProductName(message: Message, state: FSMContext, product_name: str = None) -> None:
+    productName: str = message.text if product_name is None else product_name
     await state.update_data(productName=productName)
 
     await state.set_state(ProductState.productNameSuggestedList)
@@ -101,14 +94,21 @@ async def enterProductName(message: Message, state: FSMContext) -> None:
 
 @productRouter.message(ProductState.productName, F.content_type == "voice")
 async def enterProductNameByAudio(message: Message, state: FSMContext) -> None:
+    await message.reply(text=RECOGNITION_CAN_TAKE_LONG_TIME_TEXT)
+
     file_id = message.voice.file_id
     file = await bot.get_file(file_id)
     file_path = file.file_path
     binaryIO = await bot.download_file(file_path)
 
-    # Использовать это для отправки по api
     voiceBase64 = base64.b64encode(binaryIO.read()).decode()
-    print(voiceBase64)
+    recognizedText = await ApiActions.speechToText(message, voiceBase64)
+
+    if len(recognizedText) == 0:
+        await message.answer(text=SPEECH_DOES_NOT_RECOGNIZED_TEXT)
+        return
+
+    await enterProductName(message, state, product_name=recognizedText)
 
 
 @productRouter.message(ProductState.productNameSuggestedList, F.text != BACK_BUTTON_TEXT)

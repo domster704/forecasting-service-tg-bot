@@ -9,8 +9,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import Message, KeyboardButton, InlineKeyboardButton, CallbackQuery
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiohttp import ClientSession
 
-from config import AsyncSessionDB
+from config import AsyncSessionDB, apiURL_ML
 from db.db import User
 from db.db_utils import getUser
 from handlers.product_handler import productActionsInit
@@ -19,6 +20,20 @@ from state.create_product_state import AddProductToPurchase
 from state.product_state import ProductState
 
 createPurchaseRouter = Router()
+
+
+class CreateProductPurchaseActions(object):
+    @staticmethod
+    async def predictNextPurchaseValues(message: Message):
+        user: User = await getUser(message.from_user.id)
+        async with ClientSession() as session:
+            async with session.get(f"{apiURL_ML}/v1/ml/forecast/forecast_next_purchase", params={
+                "user_id": user.db_id
+            }) as r:
+                if r.status == 200:
+                    return await r.json()
+
+                return None
 
 
 class CallbackDataAddingEnum(object):
@@ -64,23 +79,45 @@ async def purchaseProductEdit(message: Message, state: FSMContext) -> None:
     product_name = stateData['product_name']
 
     purchaseProductData = user.getProductInPurchase(purchase, product_name)
-
     if purchaseProductData is None:
         await purchaseProductCreatingInit(message, state)
         return
-    json = {
-        "purchaseAmount": purchaseProductData['nmc'],
-        "nmc": purchaseProductData['purchaseAmount'],
-        "dateStart": purchaseProductData['dateStart'],
-        "dateEnd": purchaseProductData['dateEnd'],
-        "deliveryConditions": purchaseProductData['deliveryConditions'],
-    }
-    await purchaseProductCreatingInit(message, state, json=json)
+
+    await purchaseProductCreatingInit(message, state, json=purchaseProductData)
 
 
 @createPurchaseRouter.message(AddProductToPurchase.chooseAction, F.text == CREATE_PRODUCT_BUTTON_TEXT)
 async def purchaseProductCreatingInit(message: Message, state: FSMContext, *, json: dict[str, str] = None) -> None:
     await state.set_state(AddProductToPurchase.initAdding)
+
+    purchaseAmount = ""
+    nmc = ""
+    dateStart = ""
+    dateEnd = ""
+    deliveryConditions = ""
+
+    if json is not None:
+        purchaseAmount = json['purchaseAmount']
+        nmc = json['nmc']
+        dateStart = json['dateStart']
+        dateEnd = json['dateEnd']
+        deliveryConditions = json['deliveryConditions']
+    else:
+        regularity = (await state.get_data())['regularity']
+        if regularity is not None and regularity:
+            purchaseValues: dict = await CreateProductPurchaseActions.predictNextPurchaseValues(message)
+            if purchaseValues is not None:
+                purchaseAmount = purchaseValues['deliveryAmount']
+                nmc = purchaseValues['nmc']
+                dateStart = purchaseValues['start_date']
+                dateEnd = purchaseValues['end_date']
+                deliveryConditions = ""
+
+    await state.update_data(purchaseAmount=purchaseAmount)
+    await state.update_data(nmc=nmc)
+    await state.update_data(dateStart=dateStart)
+    await state.update_data(dateEnd=dateEnd)
+    await state.update_data(deliveryConditions=deliveryConditions)
 
     keyboard = ReplyKeyboardBuilder().row(
         KeyboardButton(text=FINISH_ADDING_PRODUCT),
@@ -89,26 +126,6 @@ async def purchaseProductCreatingInit(message: Message, state: FSMContext, *, js
     )
     await message.answer(text=ADD_PRODUCT_TO_PURCHASE_MESSAGE_TEXT,
                          reply_markup=keyboard.as_markup(resize_keyboard=True))
-
-    regularity = (await state.get_data())['regularity']
-    if regularity is None or not regularity:
-        amount = ""
-        nmc = ""
-        dateStart = ""
-        dateEnd = ""
-        deliveryConditions = ""
-    else:
-        amount = 100 if json is None else json['purchaseAmount']
-        nmc = 10000 if json is None else json['nmc']
-        dateStart = "20.07.2024" if json is None else json['dateStart']
-        dateEnd = "20.08.2024" if json is None else json['dateEnd']
-        deliveryConditions = "" if json is None else json['deliveryConditions']
-
-    await state.update_data(purchaseAmount=amount)
-    await state.update_data(nmc=nmc)
-    await state.update_data(dateStart=dateStart)
-    await state.update_data(dateEnd=dateEnd)
-    await state.update_data(deliveryConditions=deliveryConditions)
 
     inlineKeyboard = InlineKeyboardBuilder().row(
         InlineKeyboardButton(text=ADD_PRODUCT_AMOUNT_BUTTON, callback_data=CallbackDataAddingEnum.AMOUNT),
@@ -122,7 +139,7 @@ async def purchaseProductCreatingInit(message: Message, state: FSMContext, *, js
         InlineKeyboardButton(text=ADD_PRODUCT_DELIVERY_BUTTON, callback_data=CallbackDataAddingEnum.DELIVERY_CONDITION),
     )
 
-    await message.answer(text=CREATE_PURCHASE_INIT_MESSAGE_TEXT(amount, nmc, dateStart, dateEnd),
+    await message.answer(text=CREATE_PURCHASE_INIT_MESSAGE_TEXT(purchaseAmount, nmc, dateStart, dateEnd),
                          reply_markup=inlineKeyboard.as_markup())
 
 

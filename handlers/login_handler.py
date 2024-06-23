@@ -36,7 +36,7 @@ async def loginHandlerInit(message: types.Message, state: FSMContext) -> None:
     :return:
     """
     user: User = await getUser(message.chat.id)
-    if user is not None and user.access_token is not None:
+    if user is not None and user.access_token is not None and user.isAuth:
         print(user.db_id)
         await goToInfoHandler(message, state)
         return
@@ -104,15 +104,19 @@ async def __checkAuthentication(message: types.Message, state: FSMContext,
         if not auth.isAuth:
             raise PermissionError(WRONG_LOGIN_OR_PASSWORD)
 
-        user: User = await getUser(message.chat.id)
-        if user is None:
-            async with AsyncSessionDB() as sessionDB:
+        async with AsyncSessionDB() as sessionDB:
+            user: User = await sessionDB.get(User, message.chat.id)
+            if user is None:
                 sessionDB.add(User(id=message.chat.id, isAuth=auth.isAuth, rights=auth.rights,
                                    type='admin' if auth.isAdmin else 'user', db_id=auth.db_id))
                 await sessionDB.commit()
 
                 user = await sessionDB.get(User, message.chat.id)
                 await user.setCookies(auth.cookies, sessionDB)
+            else:
+                user.isAuth = True
+                await user.setCookies(auth.cookies, sessionDB)
+                await sessionDB.commit()
 
         await message.answer(RIGHT_LOGIN_AND_PASSWORD)
         await goToInfoHandler(message, state)

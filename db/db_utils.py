@@ -19,7 +19,9 @@ async def logout(chat_id: int) -> bool:
                     if resp.status != 200:
                         return False
 
-            await sessionDB.delete(user)
+            user.isAuth = False
+            user.access_token = ''
+            user.refresh_token = ''
             await sessionDB.commit()
 
         return True

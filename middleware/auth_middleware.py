@@ -37,11 +37,10 @@ class AuthorizationCheckMiddleware(BaseMiddleware):
         :return:
         """
         try:
-            user: User | None = None
-
             async with AsyncSessionDB() as sessionDB:
                 user: User = await sessionDB.get(User, event.chat.id)
-                if user is None or user.access_token is None:
+
+                if user is None or user.access_token is None or user.isAuth is False:
                     raise PermissionError(PERMISSION_AUTH_ERROR_TEXT)
 
                 async with aiohttp.ClientSession(cookies=user.cookies) as session:
